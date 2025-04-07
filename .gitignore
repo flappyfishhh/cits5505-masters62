@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+env/
+venv/
+ENV/
+env.bak/
+.venv/
+
+# Flask instance folder
+instance/
+
+# Environment variables
+.env
+*.env
+
+# SQLite database
+*.sqlite3
+*.db
+*.db-journal
+
+# Flask migrations (if using flask-migrate)
+migrations/
+
+# Logs and coverage
+*.log
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.tox/
+.pytest_cache/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*~
+*.tmp
+*.swp
+
+# IDE / Editor folders
+.vscode/
+.idea/
+
+# Translations
+*.pot
+*.mo
