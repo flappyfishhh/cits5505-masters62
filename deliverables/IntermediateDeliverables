@@ -1,0 +1,15 @@
+# Project Milestones
+
+- **28th April – 2nd May**
+  - 5-minute presentation
+  - Describe the project idea
+  - Show GUI designs:
+    - Static HTML pages
+    - Minimal CSS styling
+    - No functionality
+e.g. button presses required, and complex graphs etc. can have placeholders
+
+- **5th May – 9th May**
+  - 5-minute presentation
+  - Demonstrate minimal dynamic functionality
+e.g. persistantly storing data in the database and altering the webpage based on it
