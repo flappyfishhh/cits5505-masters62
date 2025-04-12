@@ -1,0 +1,2 @@
+FLASK_APP=solaranalytics.py
+FLASK_ENV=development
