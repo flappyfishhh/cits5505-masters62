@@ -15,8 +15,29 @@
 
 ## Launching the Application
 
-[instructions for how to launch the application]
+```bash
+# Step 1: Clone the repository
+git clone https://github.com/flappyfishhh/cits5505-masters62.git
 
-## Running Tests
+# Step 2: Navigate to the project directory
+cd cits5505-masters62/
 
-[instructions for how to run the tests for the application]
+# Step 3: Create a virtual environment
+python -m venv venv
+
+# Step 4: Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Step 5: Install Python dependencies
+pip install -r requirements.txt
+
+# Step 6: Apply database migrations
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
+
+# Step 7: Run the project
+flask run
