@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Flask App{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </head>
+  <body>
+    {# Only show the sidebar when logged in and not on the login/register pages
+    #} {% set show_sidebar = current_user.is_authenticated and request.endpoint
+    not in ['main.login', 'main.register'] %} {% if show_sidebar %}
+    <div class="layout">
+      <aside class="sidebar">
+        <ul>
+          <li><a href="{{ url_for('main.profile') }}">User Profile</a></li>
+          <li><a href="{{ url_for('main.upload') }}">Data Upload</a></li>
+          <li><a href="{{ url_for('main.index') }}">Uploaded Files</a></li>
+          <li><a href="{{ url_for('main.logout') }}">Logout</a></li>
+        </ul>
+      </aside>
+      <div class="main">
+        {% else %}
+        <div class="container">
+          {% endif %} {% with messages = get_flashed_messages() %} {% if
+          messages %}
+          <ul class="flashes">
+            {% for msg in messages %}
+            <li>{{ msg }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %} {% endwith %} {% block content %}{% endblock %} {% if
+          show_sidebar %}
+        </div>
+        <!-- .main -->
+      </div>
+      <!-- .layout -->
+      {% else %}
+    </div>
+    <!-- .container -->
+    {% endif %}
+  </body>
+</html>
