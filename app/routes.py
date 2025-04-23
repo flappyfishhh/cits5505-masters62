@@ -96,6 +96,95 @@ def reset_password(user_id):
             return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
+@main.route('/')
+@login_required
+def index():
+    files = (
+        FileUpload.query
+        .filter_by(user_id=current_user.id)
+        .order_by(FileUpload.uploaded_at.desc())
+        .all()
+    )
+    return render_template('index.html', files=files)
+
+@main.route('/files/<int:file_id>')
+@login_required
+def view_file(file_id):
+    f = FileUpload.query.filter_by(id=file_id, user_id=current_user.id).first_or_404()
+    uploads = (
+        Upload.query
+        .filter_by(file_id=file_id)
+        .order_by(Upload.row_number)
+        .all()
+    )
+    if uploads:
+        headers = list(uploads[0].data.keys())
+        rows = [list(u.data.values()) for u in uploads]
+    else:
+        headers, rows = [], []
+    return render_template('view_file.html', file=f, headers=headers, rows=rows)
+
+@main.route('/files/<int:file_id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_file(file_id):
+    f = FileUpload.query.filter_by(id=file_id, user_id=current_user.id).first_or_404()
+    try:
+        os.remove(os.path.join(current_app.root_path, f.filepath))
+    except OSError:
+        pass
+    db.session.delete(f)
+    db.session.commit()
+    flash(f'File "{f.filename}" has been deleted.')
+    return redirect(url_for('main.index'))
+
+@main.route('/uploads/<path:filename>')
+@login_required
+def uploaded_file(filename):
+    return send_from_directory(
+        os.path.join(current_app.root_path, UPLOAD_FOLDER),
+        filename, as_attachment=True
+    )
+
+@main.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    form = UploadForm()
+    if form.validate_on_submit():
+        ensure_upload_folder()
+        f = form.csv_file.data
+        orig = secure_filename(f.filename)
+        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        saved = f"{current_user.id}_{ts}_{orig}"
+        path = os.path.join(UPLOAD_FOLDER, saved)
+        f.save(os.path.join(current_app.root_path, path))
+
+        record = FileUpload(
+            user_id=current_user.id,
+            filename=orig,
+            filepath=path,
+            city=form.city.data,
+            latitude=form.latitude.data,
+            longitude=form.longitude.data
+        )
+        db.session.add(record)
+        db.session.flush()
+
+        full = os.path.join(current_app.root_path, path)
+        with open(full, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for idx, row in enumerate(reader, start=1):
+                upload_row = Upload(
+                    file_id=record.id,
+                    row_number=idx,
+                    data=row
+                )
+                db.session.add(upload_row)
+
+        db.session.commit()
+        flash(f'File "{orig}" uploaded for {form.city.data} ({form.latitude.data}, {form.longitude.data}) with {idx} rows.')
+        return redirect(url_for('main.index'))
+    return render_template('upload.html', form=form)
+
 @main.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():

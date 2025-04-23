@@ -28,6 +28,16 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
+class UploadForm(FlaskForm):
+    city = StringField('City', validators=[DataRequired()])
+    latitude = FloatField('Latitude', validators=[DataRequired()])
+    longitude = FloatField('Longitude', validators=[DataRequired()])
+    csv_file = FileField('CSV File', validators=[
+        FileRequired(message='CSV file is required'),
+        FileAllowed(['csv'], 'Only CSV files are allowed')
+    ])
+    submit = SubmitField('Upload')
+
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Registered Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Next')
