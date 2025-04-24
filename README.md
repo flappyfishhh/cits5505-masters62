@@ -1,8 +1,14 @@
-# [Project Name]
+# Solar Exposure Data Sharing & Analysis Platform
 
 ## Purpose of the Application
 
-[a description of the purpose of the application, explaining its design and use]
+Our project is a web-based system that allows users to upload, share, and analyze solar exposure data. Users can choose to keep their data private, share it with specific individuals, or make it publicly accessible to the community.
+
+Once uploaded, the system provides intuitive visualization tools to help users make sense of their data. It supports insightful comparisons across regions or time periods, generates trend reports (such as seasonal or year-over-year changes), and can detect anomalies or outliers that may signal issues like equipment failure or unusual weather patterns.
+
+The platform also offers smart recommendations, including estimates of potential solar energy generation based on local exposure levels.
+
+To support collaboration and reporting, users can export processed data in CSV, JSON, or Excel formats, and download visualizations as high-quality images or PDFs.
 
 ## MasterGroup62
 
@@ -35,8 +41,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Step 6: Apply database migrations
-flask db init
-flask db migrate -m "Initial migration"
 flask db upgrade
 
 # Step 7: Run the project
