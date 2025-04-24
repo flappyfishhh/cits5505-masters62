@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
+from config import Config
 
 # Initialize Flask extensions (but don't bind to app yet)
 db = SQLAlchemy()
@@ -14,7 +15,7 @@ csrf = CSRFProtect()
 def create_app():
     # Create Flask application instance
     app = Flask(__name__)
-    app.config.from_object('config.Config') # Load configuration from config.py
+    app.config.from_object(Config) # Load configuration from config.py
 
     # Initialize extensions with app
     db.init_app(app)
