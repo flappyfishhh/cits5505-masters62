@@ -27,6 +27,25 @@ def ensure_upload_folder():
     os.makedirs(folder, exist_ok=True)
     return folder
 
+
+@main.route('/')
+def intro():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    return render_template('intro.html')
+
+@main.route('/dashboard')
+@login_required
+def index():
+    files = (
+        FileUpload.query
+        .filter_by(user_id=current_user.id)
+        .order_by(FileUpload.uploaded_at.desc())
+        .all()
+    )
+    return render_template('index.html', files=files)
+
+
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -96,16 +115,6 @@ def reset_password(user_id):
             return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
-@main.route('/')
-@login_required
-def index():
-    files = (
-        FileUpload.query
-        .filter_by(user_id=current_user.id)
-        .order_by(FileUpload.uploaded_at.desc())
-        .all()
-    )
-    return render_template('index.html', files=files)
 
 @main.route('/files/<int:file_id>')
 @login_required
