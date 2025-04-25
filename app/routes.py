@@ -31,10 +31,23 @@ def ensure_upload_folder():
 @main.route('/')
 def intro():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     return render_template('intro.html')
 
 @main.route('/dashboard')
+@login_required
+def dashboard():
+    # Example: Fetch recent uploads and other relevant data
+    recent_uploads = (
+        FileUpload.query
+        .filter_by(user_id=current_user.id)
+        .order_by(FileUpload.uploaded_at.desc())
+        .limit(5)
+        .all()
+    )
+    return render_template('dashboard.html', recent_uploads=recent_uploads)
+
+@main.route('/index')
 @login_required
 def index():
     files = (
@@ -44,6 +57,7 @@ def index():
         .all()
     )
     return render_template('index.html', files=files)
+
 
 
 @main.route('/register', methods=['GET', 'POST'])
@@ -67,7 +81,7 @@ def register():
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -77,14 +91,14 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':
-            next_page = url_for('main.index')
+            next_page = url_for('main.dashboard')
         return redirect(next_page)
     return render_template('login.html', form=form)
 
 @main.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('main.login'))
+    return redirect(url_for('main.intro'))
 
 @main.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
