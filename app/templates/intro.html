@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Solar Analytics!</h1>
+        <p>This web application helps users upload and visualize solar energy data (CSV format) with city-level metadata. It supports login, registration, secure file upload, and data viewing per user account.</p>
+
+        <div class="auth-buttons">
+            <a href="{{ url_for('main.login') }}" class="btn">Log In</a>
+            <a href="{{ url_for('main.register') }}" class="btn">Register</a>
+        </div>
+    </div>
+</body>
+</html>
