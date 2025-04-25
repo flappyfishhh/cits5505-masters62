@@ -21,27 +21,43 @@ To support collaboration and reporting, users can export processed data in CSV, 
 
 ## Launching the Application
 
+
+Step 1: Clone the repository
 ```bash
-# Step 1: Clone the repository
 git clone https://github.com/flappyfishhh/cits5505-masters62.git
+```
 
-# Step 2: Navigate to the project directory
+Step 2: Navigate to the project directory
+```bash
 cd cits5505-masters62/
+```
 
-# Step 3: Create a virtual environment
+Step 3: Create a virtual environment
+```bash
 python -m venv venv
+```
 
-# Step 4: Activate the virtual environment
-# On Windows:
+Step 4: Activate the virtual environment
+- On Windows:
+```bash
 venv\Scripts\activate
-# On macOS/Linux:
+```
+- On macOS/Linux:
+```bash
 source venv/bin/activate
+```
 
-# Step 5: Install Python dependencies
+Step 5: Install Python dependencies
+```bash
 pip install -r requirements.txt
+```
 
-# Step 6: Apply database migrations
+Step 6: Apply database migrations
+```bash
 flask db upgrade
+```
 
-# Step 7: Run the project
+Step 7: Run the project
+```bash
 flask run
+```
