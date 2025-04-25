@@ -1,0 +1,99 @@
+{% extends 'base.html' %} {% block title %}Update File Permissions{% endblock %}
+{% block content %}
+<h1>Update Permissions for {{ file.filename }}</h1>
+
+<form
+  method="POST"
+  action="{{ url_for('main.update_file', file_id=file.id) }}"
+  id="permissionsForm"
+>
+  {{ form.hidden_tag() }}
+
+  <div class="form-group">
+    {{ form.visibility.label }} {{ form.visibility(class="form-control") }}
+  </div>
+
+  {% if file.visibility != 'public' %}
+  <div class="form-group">
+    {{ form.share_with.label }}
+    <div class="input-group">
+      {{ form.share_with(class="form-control", placeholder="Enter
+      comma-separated emails (e.g. user1@example.com, user2@example.com)",
+      value="") }}
+      <div class="input-group-append">
+        <button type="button" class="btn btn-primary" onclick="updateShares()">
+          Update Sharing
+        </button>
+      </div>
+    </div>
+    {% if form.share_with.errors %}
+    <div class="alert alert-danger mt-2">
+      {% for error in form.share_with.errors %}
+      <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted"
+      >Note: You cannot share with yourself</small
+    >
+  </div>
+
+  <div class="form-group">
+    <label>Currently Shared With:</label>
+    <div class="shared-users">
+      {% if current_shared_emails %}
+      <ul class="list-group">
+        {% for email in current_shared_emails %}
+        <li
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          {{ email }}
+          <a
+            href="{{ url_for('main.remove_share', file_id=file.id, email=email) }}"
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('Remove sharing with {{ email }}?')"
+          >
+            Remove
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="alert alert-info">No users currently shared with</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="form-group mt-3">
+    <button type="submit" class="btn btn-primary">Save Permissions</button>
+    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+  </div>
+</form>
+
+<script>
+  function updateShares() {
+    // Submit the form via AJAX
+    fetch("{{ url_for('main.update_file', file_id=file.id) }}", {
+      method: "POST",
+      body: new FormData(document.getElementById("permissionsForm")),
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Reload just the sharing section
+          location.reload();
+        } else {
+          alert("Error: " + (data.message || "Failed to update shares"));
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while updating shares");
+      });
+  }
+</script>
+{% endblock %}
