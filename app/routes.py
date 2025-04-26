@@ -3,7 +3,7 @@ import csv
 from datetime import datetime
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
-    request, current_app, send_from_directory,jsonify
+    request, current_app, send_from_directory, jsonify
 )
 from flask_login import (
     current_user, login_user, logout_user, login_required
@@ -132,10 +132,10 @@ def intro():
 def index():
     # Own files (all visibilities)
     own_files = FileUpload.query.filter_by(user_id=current_user.id).order_by(FileUpload.uploaded_at.desc()).all()
-
+    
     # Public files (visible to all users)
     public_files = FileUpload.query.filter_by(visibility='public').order_by(FileUpload.uploaded_at.desc()).all()
-
+    
     # Shared files (shared explicitly with current user)
     shared_files = FileUpload.query.join(FileShare, FileShare.file_id == FileUpload.id)\
         .filter(FileShare.user_id == current_user.id, FileUpload.visibility == 'shared')\
@@ -180,7 +180,7 @@ def delete_file(file_id):
         pass
     db.session.delete(f)
     db.session.commit()
-    flash(f'File \"{f.filename}\" has been deleted.')
+    flash(f'File "{f.filename}" has been deleted.')
     return redirect(url_for('main.index'))
 
 # ================================
@@ -244,11 +244,15 @@ def update_file(file_id):
     if request.method == 'POST':
         if form.validate_on_submit():
             file.visibility = form.visibility.data
+
             if form.visibility.data == 'shared':
-                submitted_emails = [
-                    e.strip() for e in form.share_with.data.split(',')
-                    if e.strip() and e.strip() != current_user.email
-                ]
+                if isinstance(form.share_with.data, str):
+                    submitted_emails = [e.strip() for e in form.share_with.data.split(',') if e.strip() and e.strip() != current_user.email]
+                elif isinstance(form.share_with.data, list):
+                    submitted_emails = [e.strip() for e in form.share_with.data if e.strip() and e.strip() != current_user.email]
+                else:
+                    submitted_emails = []
+
                 all_emails = list(set(current_shared_emails + submitted_emails))
 
                 FileShare.query.filter_by(file_id=file.id).delete()
@@ -258,8 +262,10 @@ def update_file(file_id):
                         db.session.add(FileShare(file_id=file.id, user_id=user.id))
 
             db.session.commit()
+
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'success': True, 'message': 'Permissions updated successfully', 'shared_emails': all_emails if form.visibility.data == 'shared' else []})
+
             flash('Permissions updated successfully', 'success')
             return redirect(url_for('main.index', file_id=file.id))
 
