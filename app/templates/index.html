@@ -1,45 +1,192 @@
-{% extends 'base.html' %} {% block title %}Your Uploaded Files{% endblock %} {%
-block content %}
-<h1>Your Uploaded Files</h1>
-<p><a href="{{ url_for('main.upload') }}" class="btn">Upload New CSV</a></p>
+{% extends 'base.html' %} {% block title %}Your Files{% endblock %} {% block
+content %}
+<style>
+  .file-container {
+    margin-bottom: 30px;
+  }
+  .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .file-header,
+  .file-item {
+    display: grid;
+    grid-template-columns: 4fr 1fr 1fr 1fr 1.5fr 1fr 1fr 2fr;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 15px;
+  }
+  .file-header {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    border-radius: 4px;
+  }
+  .file-item {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+  }
+  .filename-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 20;
+  }
+  .numeric {
+    text-align: center;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 6px 12px;
+    background-color: #4f46e5;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .btn.delete {
+    background-color: #dc2626;
+  }
+  .empty-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+  }
+</style>
 
-{% if files %}
-<table>
-  <thead>
-    <tr>
-      <th>Filename</th>
-      <th>City</th>
-      <th>Latitude</th>
-      <th>Longitude</th>
-      <th>Uploaded At</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for file in files %} {% set saved_name = file.filepath.split('/')[-1] %}
-    <tr>
-      <td>{{ file.filename }}</td>
-      <td>{{ file.city }}</td>
-      <td>{{ '%.6f'|format(file.latitude) }}</td>
-      <td>{{ '%.6f'|format(file.longitude) }}</td>
-      <td>{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
-      <td style="display: flex; gap: 0.5rem">
+<h1>Your Files</h1>
+
+<div class="file-container">
+  <h2>My Files</h2>
+  {% if own_files %}
+  <div class="file-list">
+    <div class="file-header">
+      <div>Filename</div>
+      <div>City</div>
+      <div class="numeric">Latitude</div>
+      <div class="numeric">Longitude</div>
+      <div class="numeric">Uploaded At</div>
+      <div>Visibility</div>
+      <div>Owner</div>
+      <div>Actions</div>
+    </div>
+    {% for file in own_files %}
+    <div class="file-item">
+      <div class="filename-cell" title="{{ file.filename }}">
+        {{ file.filename }}
+      </div>
+      <div>{{ file.city }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
+      <div class="numeric">
+        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+      </div>
+      <div>{{ file.visibility|capitalize }}</div>
+      <div>{{ file.user.username }}</div>
+      <div class="actions">
         <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
           >View</a
         >
         <a
           href="{{ url_for('main.delete_file', file_id=file.id) }}"
-          class="btn"
-          style="background: #dc2626; border: none"
+          class="btn delete"
           onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');"
+          >Delete</a
         >
-          Delete
-        </a>
-      </td>
-    </tr>
+        <a href="{{ url_for('main.update_file', file_id=file.id) }}" class="btn"
+          >Update</a
+        >
+      </div>
+    </div>
     {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p>No files uploaded yet.</p>
-{% endif %} {% endblock %}
+  </div>
+  {% else %}
+  <div class="empty-message">No files uploaded yet.</div>
+  {% endif %}
+</div>
+
+<div class="file-container">
+  <h2>Public Files</h2>
+  {% if public_files %}
+  <div class="file-list">
+    <div class="file-header">
+      <div>Filename</div>
+      <div>City</div>
+      <div class="numeric">Latitude</div>
+      <div class="numeric">Longitude</div>
+      <div class="numeric">Uploaded At</div>
+      <div>Visibility</div>
+      <div>Owner</div>
+      <div>Actions</div>
+    </div>
+    {% for file in public_files %}
+    <div class="file-item">
+      <div class="filename-cell" title="{{ file.filename }}">
+        {{ file.filename }}
+      </div>
+      <div>{{ file.city }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
+      <div class="numeric">
+        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+      </div>
+      <div>{{ file.visibility|capitalize }}</div>
+      <div>{{ file.user.username }}</div>
+      <div class="actions">
+        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
+          >View</a
+        >
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-message">No public files available.</div>
+  {% endif %}
+</div>
+
+<div class="file-container">
+  <h2>Shared Files</h2>
+  {% if shared_files %}
+  <div class="file-list">
+    <div class="file-header">
+      <div>Filename</div>
+      <div>City</div>
+      <div class="numeric">Latitude</div>
+      <div class="numeric">Longitude</div>
+      <div class="numeric">Uploaded At</div>
+      <div>Visibility</div>
+      <div>Owner</div>
+      <div>Actions</div>
+    </div>
+    {% for file in shared_files %}
+    <div class="file-item">
+      <div class="filename-cell" title="{{ file.filename }}">
+        {{ file.filename }}
+      </div>
+      <div>{{ file.city }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
+      <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
+      <div class="numeric">
+        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+      </div>
+      <div>{{ file.visibility|capitalize }}</div>
+      <div>{{ file.user.username }}</div>
+      <div class="actions">
+        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
+          >View</a
+        >
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-message">No files shared with you.</div>
+  {% endif %}
+</div>
+{% endblock %}
