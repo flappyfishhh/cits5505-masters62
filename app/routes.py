@@ -32,6 +32,16 @@ def ensure_upload_folder():
     return folder
 
 # ================================
+# Intro Page (Public Landing)
+# ================================
+@main.route('/')
+def intro():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    return render_template('intro.html')
+
+
+# ================================
 # User Registration
 # ================================
 @main.route('/register', methods=['GET', 'POST'])
@@ -58,7 +68,7 @@ def register():
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -68,9 +78,25 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':
-            next_page = url_for('main.index')
+            next_page = url_for('main.dashboard')
         return redirect(next_page)
     return render_template('login.html', form=form)
+
+# ================================
+# Dashboard - central hub for users to access key features
+# ================================
+@main.route('/dashboard')
+@login_required
+def dashboard():
+    # Example: Fetch recent uploads and other relevant data
+    recent_uploads = (
+        FileUpload.query
+        .filter_by(user_id=current_user.id)
+        .order_by(FileUpload.uploaded_at.desc())
+        .limit(5)
+        .all()
+    )
+    return render_template('dashboard.html', recent_uploads=recent_uploads)
 
 # ================================
 # User Logout
@@ -78,7 +104,7 @@ def login():
 @main.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('main.login'))
+    return redirect(url_for('main.intro'))
 
 # ================================
 # Password Reset (Step 1)
@@ -115,19 +141,12 @@ def reset_password(user_id):
             return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
-# ================================
-# Intro Page (Public Landing)
-# ================================
-@main.route('/')
-def intro():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    return render_template('intro.html')
+
 
 # ================================
-# Dashboard - Shows files by access level
+# Index - Shows files by access level
 # ================================
-@main.route('/dashboard')
+@main.route('/index')
 @login_required
 def index():
     # Own files (all visibilities)
