@@ -23,7 +23,7 @@ instance/
 *.db-journal
 
 # Flask migrations (if using flask-migrate)
-migrations/
+# migrations/
 
 # Logs and coverage
 *.log

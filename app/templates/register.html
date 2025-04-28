@@ -1,0 +1,50 @@
+{% extends 'base.html' %} {% block title %}Register{% endblock %} {% block
+content %}
+<h1>Create an Account</h1>
+<form method="post" action="{{ url_for('main.register') }}">
+  {{ form.hidden_tag() }}
+
+  <div class="form-group">
+    {{ form.username.label }} {{ form.username(class="form-control",
+    placeholder="Username") }} {% for err in form.username.errors %}
+    <div class="errors">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    {{ form.email.label }} {{ form.email(class="form-control",
+    placeholder="Email") }} {% for err in form.email.errors %}
+    <div class="errors">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    {{ form.password.label }} {{ form.password(class="form-control",
+    placeholder="Password") }} {% for err in form.password.errors %}
+    <div class="errors">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    {{ form.password2.label }} {{ form.password2(class="form-control",
+    placeholder="Repeat Password") }} {% for err in form.password2.errors %}
+    <div class="errors">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    {{ form.security_answer.label }} {{
+    form.security_answer(class="form-control", placeholder="What was the name of
+    your first pet?") }} {% for err in form.security_answer.errors %}
+    <div class="errors">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">{{ form.submit(class="btn") }}</div>
+</form>
+
+<p class="mt-2 muted-color">
+  Already have an account?
+  <a href="{{ url_for('main.login') }}">Sign in here</a>.
+</p>
+{% endblock %}
