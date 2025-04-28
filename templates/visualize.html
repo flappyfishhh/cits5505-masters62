@@ -1,0 +1,50 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Visualize Data</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+  <body>
+    <div class="container">
+    <h1>Visualize Data</h1>
+    <form method="post">
+      <label for="x_axis">Select X-axis:</label>
+      <select name="x_axis" required>
+        {% for col in columns %}
+          <option value="{{ col }}">{{ col }}</option>
+        {% endfor %}
+      </select>
+      <label for="y_axis">Select Y-axis:</label>
+      <select name="y_axis" required>
+        {% for col in columns %}
+          <option value="{{ col }}">{{ col }}</option>
+        {% endfor %}
+      </select>
+      <label for="chart_type">Select Chart Type:</label>
+      <select name="chart_type" required>
+        <option value="bar">Bar</option>
+        <option value="line">Line</option>
+        <option value="scatter">Scatter</option>
+      </select>
+      <input type="submit" value="Generate Chart">
+    </form>
+
+    {% if chart %}
+    <div id="chart"></div>
+    <script>
+      var data = [{
+        x: {{ chart.x|safe }},
+        y: {{ chart.y|safe }},
+        type: '{{ chart.type }}'
+      }];
+      Plotly.newPlot('chart', data);
+    </script>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('index') }}"><button>Back</button></a>
+      <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    </div>
+</body>
+</html>
