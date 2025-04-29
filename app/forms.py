@@ -4,6 +4,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Float
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Optional
 from app.models import User
 from flask_login import current_user
+from flask_wtf import FlaskForm
 
 # =============================
 # User Registration Form
@@ -124,3 +125,10 @@ class UpdateFileForm(FlaskForm):
                     raise ValidationError("You cannot share with your own account")
                 if not User.query.filter_by(email=email).first():
                     raise ValidationError(f"User with email {email} not found")
+
+
+# =============================
+# Empty form, just for CSRF protection.
+# =============================
+class VisualizationForm(FlaskForm):
+    pass

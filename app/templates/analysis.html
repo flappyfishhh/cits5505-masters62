@@ -1,46 +1,122 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Solar Exposure Analysis</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar Data Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .styled-table {
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 18px;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        .styled-table th, .styled-table td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+        .styled-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .styled-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .button-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 40px;
+        }
+    </style>
 </head>
-  <body>
-    <div class="container">
-    <h1>Seasonal Patterns (Average Solar Exposure per Month)</h1>
-    {% if seasonal_patterns %}
-    <table border="1">
-      <tr><th>Month</th><th>Average Solar Exposure (MJ/m²)</th></tr>
-      {% for month, value in seasonal_patterns.items() %}
-        <tr><td>{{ month }}</td><td>{{ value }}</td></tr>
-      {% endfor %}
+<body>
+
+<div class="container">
+    <h1>Solar Data Analysis</h1>
+
+    <h2>Seasonal Patterns (Monthly Averages)</h2>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Average Solar Exposure (MJ/m²)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if seasonal_patterns %}
+                {% for month, value in seasonal_patterns.items() %}
+                    <tr>
+                        <td>{{ month }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="2">No seasonal pattern data available.</td></tr>
+            {% endif %}
+        </tbody>
     </table>
-    {% else %}
-    <p>No seasonal pattern data available.</p>
-    {% endif %}
 
-    <h2>Anomalies (Unusual Solar Exposure Months)</h2>
-    {% if anomalies %}
-    <ul>
-      {% for date, value in anomalies.items() %}
-        <li>{{ date }}: {{ value }} MJ/m²</li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p>No anomalies detected.</p>
-    {% endif %}
+    <br><br>
 
-    <h2>Trend Analysis: Monthly Average Solar Exposure Over Time</h2>
-    {% if trend_plot %}
-      {{ trend_plot|safe }}
-    {% else %}
-      <p>No trend data available.</p>
-    {% endif %}
+    <h2>Anomalies Detected (Unusual Monthly Averages)</h2>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Month-Year</th>
+                <th>Average Solar Exposure (MJ/m²)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if anomalies %}
+                {% for date, exposure in anomalies.items() %}
+                    <tr>
+                        <td>{{ date }}</td>
+                        <td>{{ exposure }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="2">No anomalies detected.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    <br>
-    <a href="{{ url_for('index') }}"><button>Back to Upload</button></a>
-      <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <br><br>
+
+    <h2>Trend Over Time (Monthly Average Solar Exposure)</h2>
+    <div id="trend_plot">
+        {% if trend_plot %}
+            {{ trend_plot|safe }}
+        {% else %}
+            <p>No trend plot available.</p>
+        {% endif %}
     </div>
+
+    <div class="button-container">
+        <a href="{{ url_for('main.index') }}">
+            <button class="btn">Back to Dashboard</button>
+        </a>
+    </div>
+</div>
+
 </body>
 </html>

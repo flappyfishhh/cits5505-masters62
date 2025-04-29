@@ -1,50 +1,143 @@
-
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <title>Visualize Data</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        label, select {
+            display: block;
+            margin-top: 15px;
+        }
+        /* Toast Message */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 30px;
+            font-size: 17px;
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from { top: 0; opacity: 0; }
+            to { top: 30px; opacity: 1; }
+        }
+        @keyframes fadeout {
+            from { top: 30px; opacity: 1; }
+            to { top: 0; opacity: 0; }
+        }
+    </style>
 </head>
-  <body>
-    <div class="container">
+
+<body>
+<div id="toast">Chart generated successfully!</div>
+
+<div class="container">
     <h1>Visualize Data</h1>
+
     <form method="post">
-      <label for="x_axis">Select X-axis:</label>
-      <select name="x_axis" required>
-        {% for col in columns %}
-          <option value="{{ col }}">{{ col }}</option>
-        {% endfor %}
-      </select>
-      <label for="y_axis">Select Y-axis:</label>
-      <select name="y_axis" required>
-        {% for col in columns %}
-          <option value="{{ col }}">{{ col }}</option>
-        {% endfor %}
-      </select>
-      <label for="chart_type">Select Chart Type:</label>
-      <select name="chart_type" required>
-        <option value="bar">Bar</option>
-        <option value="line">Line</option>
-        <option value="scatter">Scatter</option>
-      </select>
-      <input type="submit" value="Generate Chart">
+        {{ form.hidden_tag() }}
+
+        <label for="x_axis">Select X-axis:</label>
+        <select name="x_axis" required>
+            {% for col in columns %}
+                <option value="{{ col }}">{{ col }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="y_axis">Select Y-axis:</label>
+        <select name="y_axis" required>
+            {% for col in columns %}
+                <option value="{{ col }}">{{ col }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="chart_type">Select Chart Type:</label>
+        <select name="chart_type" required>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="scatter">Scatter</option>
+        </select>
+
+        <button type="submit" class="btn">Generate Chart</button>
     </form>
 
     {% if chart %}
+    <h2 style="margin-top: 30px;" id="chart_title">Chart Preview</h2>
     <div id="chart"></div>
+
     <script>
-      var data = [{
-        x: {{ chart.x|safe }},
-        y: {{ chart.y|safe }},
-        type: '{{ chart.type }}'
-      }];
-      Plotly.newPlot('chart', data);
+        function showToast() {
+            var x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        function scrollToChart() {
+            document.getElementById('chart_title').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        var data = [{
+            x: JSON.parse({{ chart.x|tojson|safe }}),
+            y: JSON.parse({{ chart.y|tojson|safe }}),
+            type: '{{ chart.type }}'
+        }];
+
+        Plotly.newPlot('chart', data, {
+            title: 'Generated Chart',
+            xaxis: { title: 'X Axis' },
+            yaxis: { title: 'Y Axis' }
+        }).then(function() {
+            showToast();
+            scrollToChart();
+        });
     </script>
     {% endif %}
-    <br>
-    <a href="{{ url_for('index') }}"><button>Back</button></a>
-      <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    </div>
+
+    <br><br>
+ <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+    <a href="{{ url_for('main.index') }}">
+        <button class="btn">Back to Dashboard</button>
+    </a>
+    
+<a href="{{ url_for('main.solar_analysis', file_id=file_id) }}">
+    <button class="btn">Go to Analysis</button>
+</a>
+
+	
+</div>
+
+
+</div>
 </body>
 </html>

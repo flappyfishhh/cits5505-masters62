@@ -17,9 +17,12 @@ from app.forms import (
     ForgotPasswordForm, ResetPasswordForm,
     UpdateEmailForm, ChangePasswordForm, UpdateFileForm
 )
+from app.forms import VisualizationForm
 import pandas as pd
 import plotly.graph_objs as go
 from flask import session 
+from flask import render_template, request
+import json
 
 # ================================
 # Upload Blueprint
@@ -353,47 +356,34 @@ def profile():
 
     return render_template('profile.html', email_form=email_form, pw_form=pw_form)
 
-
-# ================================
-# Solar Data Upload (NEW)
-# ================================
-@main.route('/solar_upload', methods=['GET', 'POST'])
-@login_required
-def solar_upload():
-    ensure_upload_folder()
-    if request.method == 'POST':
-        file = request.files.get('file')
-        if file and file.filename.endswith('.csv'):
-            filename = secure_filename(file.filename)
-            save_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
-            file.save(save_path)
-            flash('Solar data file uploaded successfully!', 'success')
-            # Store filename in session or db if needed later
-            session['solar_file'] = filename
-            return redirect(url_for('main.solar_visualize'))
-        else:
-            flash('Invalid file type. Please upload a CSV file.', 'danger')
-    return render_template('solar_upload.html')  # you need to rename your index.html as solar_upload.html
-
-
 # ================================
 # Solar Data Visualization
 # ================================
-@main.route('/solar_visualize', methods=['GET', 'POST'])
+@main.route('/visualize/<int:file_id>', methods=['GET', 'POST'])
 @login_required
-def solar_visualize():
-    filename = session.get('solar_file')
-    if not filename:
-        flash('No solar data file uploaded.', 'danger')
-        return redirect(url_for('main.solar_upload'))
+def visualize(file_id):
+    form = VisualizationForm()
+    uploaded_file = FileUpload.query.get_or_404(file_id)
 
-    filepath = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
+    # Permission check
+    if uploaded_file.visibility == 'private' and uploaded_file.user_id != current_user.id:
+        flash('Private file. You do not have permission.', 'danger')
+        return redirect(url_for('main.index'))
+    elif uploaded_file.visibility == 'shared':
+        if current_user != uploaded_file.user and current_user not in uploaded_file.share_with:
+            flash('Shared file. You are not authorized.', 'danger')
+            return redirect(url_for('main.index'))
+
+    filepath = os.path.join(current_app.root_path, uploaded_file.filepath)
 
     if not os.path.exists(filepath):
-        flash('Solar data file not found.', 'danger')
-        return redirect(url_for('main.solar_upload'))
-
+        flash('Uploaded file not found.', 'danger')
+        return redirect(url_for('main.index'))
+# Step 1: Read the file
     df = pd.read_csv(filepath)
+    #Step 2: Fix duplicate columns immediately
+    df.columns = pd.Series(df.columns).where(~pd.Series(df.columns).duplicated(), df.columns + '_' + pd.Series(df.columns).duplicated(keep=False).cumsum().astype(str))
+    # Step 3: Extract column names safely
     columns = df.columns.tolist()
     chart = None
 
@@ -401,41 +391,55 @@ def solar_visualize():
         x_axis = request.form['x_axis']
         y_axis = request.form['y_axis']
         chart_type = request.form['chart_type']
-        data = df[[x_axis, y_axis]].dropna().to_dict(orient='list')
-        chart = {'x': data[x_axis], 'y': data[y_axis], 'type': chart_type}
 
-    return render_template('visualize.html', columns=columns, chart=chart)
+        # SAFE JSON CONVERSION
+        data = df[[x_axis, y_axis]].dropna().to_dict(orient='list')
+        
+      
+        
+        chart = {
+            'x': json.dumps(data[x_axis]),
+            'y': json.dumps(data[y_axis]),
+            'type': chart_type
+        }
+        
+
+    
+    return render_template('visualize.html', columns=columns, chart=chart, form=form, file_id=file_id)
 
 
 # ================================
 # Solar Data Analysis (Trend + Anomalies)
 # ================================
-@main.route('/solar_analysis')
+@main.route('/solar_analysis/<int:file_id>')
 @login_required
-def solar_analysis():
-    filename = session.get('solar_file')
-    if not filename:
-        flash('No solar data file uploaded.', 'danger')
-        return redirect(url_for('main.solar_upload'))
+def solar_analysis(file_id):
+    uploaded_file = FileUpload.query.get_or_404(file_id)
 
-    filepath = os.path.join(current_app.root_path, UPLOAD_FOLDER, filename)
+    filepath = os.path.join(current_app.root_path, uploaded_file.filepath)
 
     if not os.path.exists(filepath):
-        flash('Solar data file not found.', 'danger')
-        return redirect(url_for('main.solar_upload'))
+        flash('Uploaded file not found.', 'danger')
+        return redirect(url_for('main.index'))
 
+    # Read CSV
     df = pd.read_csv(filepath)
+
+    # Remove duplicate columns 
+    df.columns = pd.Series(df.columns).where(~pd.Series(df.columns).duplicated(), df.columns + '_' + pd.Series(df.columns).duplicated(keep=False).cumsum().astype(str))
+
     trend_plot = None
+    seasonal_patterns = None
+    anomalies = None
 
     if {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}.issubset(df.columns):
         df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
+
         monthly_avg = df.groupby(df['Date'].dt.to_period('M'))['Daily global solar exposure (MJ/m*m)'].mean()
         monthly_avg.index = monthly_avg.index.to_timestamp()
 
-        # Seasonal Patterns
-        monthly_seasonal = df.groupby(df['Month'])['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
+        seasonal_patterns = df.groupby('Month')['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
 
-        # Anomaly Detection
         Q1 = monthly_avg.quantile(0.25)
         Q3 = monthly_avg.quantile(0.75)
         IQR = Q3 - Q1
@@ -443,7 +447,6 @@ def solar_analysis():
         upper_bound = Q3 + 1.5 * IQR
         anomalies = monthly_avg[(monthly_avg < lower_bound) | (monthly_avg > upper_bound)].round(2).to_dict()
 
-        # Trend Plot
         trend_fig = go.Figure()
         trend_fig.add_trace(go.Scatter(
             x=monthly_avg.index,
@@ -459,39 +462,7 @@ def solar_analysis():
         )
         trend_plot = trend_fig.to_html(full_html=False)
 
-        return render_template('analysis.html', seasonal_patterns=monthly_seasonal, anomalies=anomalies, trend_plot=trend_plot)
-
-    return render_template('analysis.html', seasonal_patterns=None, anomalies=None, trend_plot=None)
-
-@main.route('/files/<int:file_id>/visualize', methods=['GET', 'POST'])
-@login_required
-def visualize_file(file_id):
-    f = FileUpload.query.filter_by(id=file_id).first_or_404()
-
-    # Permission check
-    if f.visibility == 'private' and f.user_id != current_user.id:
-        flash('Private file, you do not have permission')
-        return redirect(url_for('main.index'))
-    elif f.visibility == 'shared':
-        if current_user != f.user and current_user not in f.share_with:
-            flash('Shared file, you are not authorized')
-            return redirect(url_for('main.index'))
-
-    # Load file data
-    filepath = os.path.join(current_app.root_path, f.filepath)
-    if not os.path.exists(filepath):
-        flash('File not found.', 'danger')
-        return redirect(url_for('main.index'))
-
-    df = pd.read_csv(filepath)
-    columns = df.columns.tolist()
-    chart = None
-
-    if request.method == 'POST':
-        x_axis = request.form['x_axis']
-        y_axis = request.form['y_axis']
-        chart_type = request.form['chart_type']
-        data = df[[x_axis, y_axis]].dropna().to_dict(orient='list')
-        chart = {'x': data[x_axis], 'y': data[y_axis], 'type': chart_type}
-
-    return render_template('visualize.html', columns=columns, chart=chart)
+    return render_template('analysis.html',
+                           seasonal_patterns=seasonal_patterns,
+                           anomalies=anomalies,
+                           trend_plot=trend_plot)
