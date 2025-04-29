@@ -19,45 +19,64 @@ To support collaboration and reporting, users can export processed data in CSV, 
 | 24284623 | Joshua Wang             | JoJohowl        |
 | 24289358 | Chamodhi Withana Gamage | chamodhii       |
 
-## Launching the Application
+## Launching the Application (With Test Data)
 
+Step 1: Clone the Repository
 
-Step 1: Clone the repository
 ```bash
 git clone https://github.com/flappyfishhh/cits5505-masters62.git
 ```
 
-Step 2: Navigate to the project directory
+Step 2: Navigate to the Project Directory
+
 ```bash
 cd cits5505-masters62/
 ```
 
-Step 3: Create a virtual environment
+Step 3: Create a Virtual Environment
+
 ```bash
 python -m venv venv
 ```
 
-Step 4: Activate the virtual environment
+Step 4: Activate the Virtual Environment
+
 - On Windows:
+
 ```bash
 venv\Scripts\activate
 ```
+
 - On macOS/Linux:
+
 ```bash
 source venv/bin/activate
 ```
 
-Step 5: Install Python dependencies
+Step 5: Install Python Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Step 6: Apply database migrations
+Step 6: Initialize the Database
+Run database migrations to set up the database schema:
+
 ```bash
 flask db upgrade
 ```
 
-Step 7: Run the project
+Step7: Insert Test Data
+run the provided `seed_data.py` script to automatically populate the database with test users, files, and uploads.
+
+```bash
+python seed_data.py
+```
+
+Step 8: Run the project
+
 ```bash
 flask run
 ```
+
+The app will be available at 'http://127.0.0.1:5000/'
