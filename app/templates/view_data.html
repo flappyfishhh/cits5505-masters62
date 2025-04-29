@@ -1,0 +1,19 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>View Data</title>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+  <body>
+    <div class="container">
+    <h1>Uploaded CSV Data</h1>
+    {% for table in tables %}
+      {{ table|safe }}
+    {% endfor %}
+    <br>
+    <a href="{{ url_for('index') }}"><button>Back</button></a>
+      <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    </div>
+</body>
+</html>
