@@ -19,23 +19,23 @@ def seed():
     # Create users
     user1 = User(username='admin', email='admin@example.com')
     user1.set_password('admin')
-    user1.set_security_answer('cookie')
+    user1.set_security_answer('cookies')
 
     user2 = User(username='nancy', email='nancy@example.com')
     user2.set_password('nancy')
-    user2.set_security_answer('cookie')
+    user2.set_security_answer('earth')
 
     user3 = User(username='joshua', email='joshua@example.com')
     user3.set_password('joshua')
-    user3.set_security_answer('zeus')
+    user3.set_security_answer('mars')
 
     user4 = User(username='cham', email='cham@example.com')
     user4.set_password('cham')
-    user4.set_security_answer('zeus')
+    user4.set_security_answer('venus')
 
     user5 = User(username='ethan', email='ethan@example.com')
     user5.set_password('ethan')
-    user5.set_security_answer('zeus')
+    user5.set_security_answer('jupiter')
 
     db.session.add_all([user1, user2, user3, user4, user5])
     db.session.commit()
@@ -135,7 +135,7 @@ def seed():
             db.session.add_all(uploads)
             db.session.commit()
 
-    print('✅ Test data inserted successfully!')
+    print('Test data inserted successfully!')
 
 if __name__ == '__main__':
     seed()
