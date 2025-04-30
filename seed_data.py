@@ -108,7 +108,7 @@ def seed():
     ]
 
     for file_info in csv_files_info:
-        csv_path = os.path.join('tests', file_info['filename'])
+        csv_path = os.path.join('tests', 'assets', file_info['filename'])
 
         file_upload = FileUpload(
             user_id=file_info['uploader'].id,
