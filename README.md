@@ -2,7 +2,7 @@
 
 ## Purpose of the Application
 
-**SolarScope** is a simple online tool that helps people upload, view, and share solar exposure data. You can keep your data private, share it with specific people, or let everyone see it.
+**SolarScope** is a web-based system that allows users to upload, share, and analyze solar exposure data. Users can choose to keep their data private, share it with specific individuals, or make it publicly accessible to the community.
 
 Once your data is uploaded, SolarScope makes it easy to explore and understand using visual tools. You can:
 
@@ -67,14 +67,16 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Step 6: Initialize the Database
+### Step 6: Initialize the Database
+
 Run database migrations to set up the database schema:
 
 ```bash
 flask db upgrade
 ```
 
-Step7: Insert Test Data
+### Step7: Insert Test Data
+
 Run the provided `seed_data.py` script to populate the database with test users, files, and uploads.
 
 ```bash
@@ -96,17 +98,7 @@ This project includes both unit tests and end-to-end tests using **Pytest** and 
 If you plan to run Selenium tests, ensure you have the appropriate browser driver installed and in your system PATH:
 
 - For Chrome: [Download ChromeDriver](https://sites.google.com/chromium.org/driver/)
-  Test it with:
-  > ```bash
-  > chromedriver --version
-  > ```
 - For Firefox: [Download GeckoDriver](https://github.com/mozilla/geckodriver/releases)
-
-Test it with:
-
-> ```bash
-> geckodriver --version
-> ```
 
 ### Running the Tests
 
@@ -122,6 +114,6 @@ This project also includes a `pytest.ini` configuration file to manage test disc
 
 - `tests/` – main test directory
   - `conftest.py` – shared fixtures for both unit and Selenium tests
-  - `selenium/` – end-to-end browser tests (e.g., `test_end_to_end.py`)
+  - `selenium/` – end-to-end browser tests
   - `unit/` – unit tests for backend logic
   - `assets/` – test CSV files used for seeding and visualization tests
