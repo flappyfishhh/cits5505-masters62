@@ -1,14 +1,22 @@
-# Solar Exposure Data Sharing & Analysis Platform
+# SolarScope: Solar Exposure Data Sharing & Analysis Platform
 
 ## Purpose of the Application
 
-Our project is a web-based system that allows users to upload, share, and analyze solar exposure data. Users can choose to keep their data private, share it with specific individuals, or make it publicly accessible to the community.
+**SolarScope** is a simple online tool that helps people upload, view, and share solar exposure data. You can keep your data private, share it with specific people, or let everyone see it.
 
-Once uploaded, the system provides intuitive visualization tools to help users make sense of their data. It supports insightful comparisons across regions or time periods, generates trend reports (such as seasonal or year-over-year changes), and can detect anomalies or outliers that may signal issues like equipment failure or unusual weather patterns.
+Once your data is uploaded, SolarScope makes it easy to explore and understand using visual tools. You can:
 
-The platform also offers smart recommendations, including estimates of potential solar energy generation based on local exposure levels.
+- Compare solar data across places and over time (like monthly, yearly, or by season)
 
-To support collaboration and reporting, users can export processed data in CSV, JSON, or Excel formats, and download visualizations as high-quality images or PDFs.
+- See summaries of the data like averages, highest and lowest values
+
+- Spot unusual patterns or problems
+
+- Estimate how much solar energy your area could produce
+
+You can also download your data in CSV format or save charts as images or PDFs for reports.
+
+SolarScope helps users make better decisions about solar panels, energy use, and planning based on real sunlight data.
 
 ## MasterGroup62
 
@@ -59,14 +67,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 6: Initialize the Database
+Step 6: Initialize the Database
 Run database migrations to set up the database schema:
 
 ```bash
 flask db upgrade
 ```
 
-### Step7: Insert Test Data
+Step7: Insert Test Data
 Run the provided `seed_data.py` script to populate the database with test users, files, and uploads.
 
 ```bash
@@ -79,4 +87,41 @@ python seed_data.py
 flask run
 ```
 
-The app will be available at http://127.0.0.1:5000/
+The app will be available at 'http://127.0.0.1:5000/'
+
+## Running Tests
+
+This project includes both unit tests and end-to-end tests using **Pytest** and **Selenium**.
+
+If you plan to run Selenium tests, ensure you have the appropriate browser driver installed and in your system PATH:
+
+- For Chrome: [Download ChromeDriver](https://sites.google.com/chromium.org/driver/)
+  Test it with:
+  > ```bash
+  > chromedriver --version
+  > ```
+- For Firefox: [Download GeckoDriver](https://github.com/mozilla/geckodriver/releases)
+
+Test it with:
+
+> ```bash
+> geckodriver --version
+> ```
+
+### Running the Tests
+
+To run all tests:
+
+```bash
+pytest
+```
+
+### Test Structure
+
+This project also includes a `pytest.ini` configuration file to manage test discovery and reporting.
+
+- `tests/` – main test directory
+  - `conftest.py` – shared fixtures for both unit and Selenium tests
+  - `selenium/` – end-to-end browser tests (e.g., `test_end_to_end.py`)
+  - `unit/` – unit tests for backend logic
+  - `assets/` – test CSV files used for seeding and visualization tests
