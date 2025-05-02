@@ -349,3 +349,88 @@ def profile():
         return redirect(url_for('main.profile'))
 
     return render_template('profile.html', email_form=email_form, pw_form=pw_form)
+# ================================
+# Rendering visualisation page
+# ================================
+@main.route('/visualisation')
+@login_required
+def visualisation():
+    private_files = (
+        FileUpload.query
+        .filter_by(user_id=current_user.id)
+        .order_by(FileUpload.uploaded_at.desc())
+        .all()
+    )
+    current_app.logger.info(f"Private files: {private_files}")
+
+    shared_files = (
+        FileUpload.query
+        .join(FileShare, FileShare.file_id == FileUpload.id)
+        .filter(FileShare.user_id == current_user.id, FileUpload.visibility == 'shared')
+        .order_by(FileUpload.uploaded_at.desc())
+        .all()
+    )
+    current_app.logger.info(f"Shared files: {shared_files}")
+
+    public_files = (
+        FileUpload.query
+        .filter_by(visibility='public')
+        .order_by(FileUpload.uploaded_at.desc())
+        .all()
+    )
+    current_app.logger.info(f"Public files: {public_files}")
+
+    uploaded_files = private_files + shared_files + public_files
+    return render_template('visualisation.html', uploaded_files=uploaded_files)
+# ================================
+# Get file data for visualisation
+# ================================
+@main.route('/get-file-data/<int:file_id>', methods=['GET'])
+@login_required
+def get_file_data(file_id):
+    current_app.logger.info(f"Fetching file with ID {file_id} for user {current_user.id}")
+
+    # Query the file metadata
+    file_record = (
+        FileUpload.query
+        .filter(
+            (FileUpload.id == file_id) & (
+                (FileUpload.user_id == current_user.id) |
+                (FileUpload.visibility == 'public') |
+                (
+                    (FileUpload.visibility == 'shared') &
+                    (FileShare.user_id == current_user.id)
+                )
+            )
+        )
+        .join(FileShare, isouter=True)
+        .first()
+    )
+
+    if not file_record:
+        current_app.logger.error(f"File with ID {file_id} not found or access denied for user {current_user.id}")
+        abort(404, description="File not found or access denied.")
+
+    current_app.logger.info(f"File metadata: {file_record}")
+
+    # Query the rows of data
+    rows = Upload.query.filter_by(file_id=file_id).order_by(Upload.row_number).all()
+
+    if not rows:
+        current_app.logger.error(f"No data found for file ID {file_id}")
+        abort(404, description="No data found for the selected file.")
+
+    current_app.logger.info(f"Number of rows found: {len(rows)}")
+
+    # Prepare the data
+    data = []
+    for row in rows:
+        date = f"{row.data['Year']}-{row.data['Month'].zfill(2)}-{row.data['Day'].zfill(2)}"
+        data.append({
+            "date": date,
+            "solar_exposure": float(row.data['Daily global solar exposure (MJ/m*m)']) if row.data.get('Daily global solar exposure (MJ/m*m)') else None
+        })
+
+    current_app.logger.info(f"Prepared data: {data}")
+
+    return jsonify({"filename": file_record.filename, "data": data})
