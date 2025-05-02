@@ -1,6 +1,6 @@
 import os
 import csv
-from datetime import datetime
+from datetime import datetime, UTC
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
     request, current_app, send_from_directory, jsonify
@@ -227,7 +227,7 @@ def upload():
         ensure_upload_folder()
         f = form.csv_file.data
         orig = secure_filename(f.filename)
-        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        ts = datetime.now(UTC).strftime('%Y%m%d%H%M%S')
         saved = f"{current_user.id}_{ts}_{orig}"
         path = os.path.join(UPLOAD_FOLDER, saved)
         f.save(os.path.join(current_app.root_path, path))
