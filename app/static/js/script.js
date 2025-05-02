@@ -63,6 +63,7 @@ $(function () {
     const selectedFileIds = [];
     const cityNames = []; // Store city names for the legend
 
+    // Loop through all dropdowns and collect valid selections
     for (let i = 1; i <= dropdownCount; i++) {
       const dropdown = document.getElementById(`dataset-select-${i}`);
       if (dropdown && dropdown.value) {
