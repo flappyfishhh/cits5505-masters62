@@ -43,4 +43,4 @@ def create_app():
 @login.user_loader
 def load_user(user_id):
     from app.models import User
-    return User.query.get(int(user_id))  # Used to load user from session
+    return db.session.get(User, int(user_id))  # Used to load user from session
