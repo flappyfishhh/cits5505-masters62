@@ -7,16 +7,27 @@
   <h2 class="text-3xl font-bold mb-6">Data Visualisation</h2>
   <p>Select datasets to visualise and compare solar exposure trends.</p>
 
-  <!-- Dropdown menu for selecting a CSV file -->
-  <label for="dataset-select" class="block text-lg font-medium mb-2">Choose a dataset by city:</label>
-  <select id="dataset-select" class="border border-gray-300 rounded-md p-2 w-full">
-    <option value="" disabled selected>Select a city</option>
-    {% for file in uploaded_files %}
-    <option value="{{ file.id }}">{{ file.city }} ({{ file.filename }})</option>
-    {% endfor %}
-  </select>
+  <!-- Dropdown menu for selecting the first dataset -->
+  <div id="dropdown-container">
+    <div class="dropdown-item">
+      <label for="dataset-select-1" class="block text-lg font-medium mb-2">Choose a dataset:</label>
+      <select id="dataset-select-1" class="border border-gray-300 rounded-md p-2 w-full">
+        <option value="" disabled selected>Select a city</option>
+        {% for file in uploaded_files %}
+        <option value="{{ file.id }}">{{ file.city }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
 
-  <button id="load-dataset" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md">Load Dataset</button>
+  <!-- Checkbox to add another city -->
+  <div class="mt-4">
+    <input type="checkbox" id="add-city-checkbox" class="mr-2">
+    <label for="add-city-checkbox" class="text-lg font-medium">Add another city</label>
+  </div>
+
+  <!-- Button for visualizing datasets -->
+  <button id="visualize-datasets" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md">Visualise</button>
 
   <!-- Chart container -->
   <div class="mt-8">
