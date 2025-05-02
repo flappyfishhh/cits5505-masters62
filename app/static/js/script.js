@@ -7,6 +7,8 @@ $(function () {
   const dropdownContainer = document.getElementById('dropdown-container');
   const addCityCheckbox = document.getElementById('add-city-checkbox');
   const visualizeButton = document.getElementById('visualize-datasets');
+  const exportPdfButton = document.getElementById('export-pdf');
+  const exportImageButton = document.getElementById('export-image');
   let solarChartInstance = null; // Declare the chart instance only once
   let dropdownCount = 1; // Keep track of the number of dropdowns
 
@@ -169,4 +171,16 @@ $(function () {
       }
     });
   }
+
+
+  // Export chart as PNG/JPG
+  exportImageButton.addEventListener('click', function () {
+    const canvas = document.getElementById('solarChart');
+    canvas.toBlob(function (blob) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'solar_analysis.png'; // Default filename
+      link.click();
+    }, 'image/png');
+  });
 });

@@ -34,9 +34,13 @@
     <canvas id="solarChart" width="800" height="400"></canvas>
   </div>
 </div>
-
+<!-- Add export buttons below the chart -->
+<div class="mt-4 flex space-x-4">
+  <button id="export-pdf" class="bg-green-500 text-white px-4 py-2 rounded-md">Export as PDF</button>
+  <button id="export-image" class="bg-blue-500 text-white px-4 py-2 rounded-md">Export as PNG/JPG</button>
+</div>
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
-<!-- Include your custom script -->
+
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}
