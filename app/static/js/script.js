@@ -66,13 +66,13 @@ $(function () {
     const cityNames = []; // Store city names for the legend
 
     // Loop through all dropdowns and collect valid selections
-    for (let i = 1; i <= dropdownCount; i++) {
-      const dropdown = document.getElementById(`dataset-select-${i}`);
+    const dropdowns = dropdownContainer.querySelectorAll('select');
+    dropdowns.forEach((dropdown) => {
       if (dropdown && dropdown.value) {
         selectedFileIds.push(dropdown.value);
         cityNames.push(dropdown.options[dropdown.selectedIndex].text); // Get the city name
       }
-    }
+    });
 
     if (selectedFileIds.length > 0) {
       const fetchPromises = selectedFileIds.map(fileId =>
@@ -171,7 +171,6 @@ $(function () {
       }
     });
   }
-
 
   // Export chart as PNG/JPG
   exportImageButton.addEventListener('click', function () {
