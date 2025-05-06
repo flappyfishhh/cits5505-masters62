@@ -12,6 +12,27 @@ $(function () {
   let solarChartInstance = null; // Declare the chart instance only once
   let dropdownCount = 1; // Keep track of the number of dropdowns
 
+  // Function to update dropdown options dynamically
+  function updateDropdownOptions() {
+    const selectedValues = Array.from(dropdownContainer.querySelectorAll('select'))
+      .map(dropdown => dropdown.value)
+      .filter(value => value); // Get all selected values
+
+    // Loop through all dropdowns and update their options
+    dropdownContainer.querySelectorAll('select').forEach(dropdown => {
+      const currentValue = dropdown.value; // Preserve the current value
+      const options = dropdown.querySelectorAll('option');
+
+      options.forEach(option => {
+        if (selectedValues.includes(option.value) && option.value !== currentValue) {
+          option.style.display = 'none'; // Hide already-selected options
+        } else {
+          option.style.display = ''; // Show available options
+        }
+      });
+    });
+  }
+
   // Add event listener for the checkbox
   addCityCheckbox.addEventListener('change', function () {
     if (addCityCheckbox.checked && dropdownCount < 4) {
@@ -56,7 +77,17 @@ $(function () {
         if (dropdownCount < 4) {
           addCityCheckbox.disabled = false;
         }
+
+        // Update dropdown options after deletion
+        updateDropdownOptions();
       });
+
+      // Add event listener for the new dropdown to update options dynamically
+      const newSelect = newDropdown.querySelector('select');
+      newSelect.addEventListener('change', updateDropdownOptions);
+
+      // Update dropdown options after adding a new dropdown
+      updateDropdownOptions();
     }
   });
 
@@ -114,71 +145,4 @@ $(function () {
     const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
     return { labels, values };
   }
-
-  // Render the chart using Chart.js
-  function renderChart(chartDataArray, cityNames) {
-    const canvas = document.getElementById('solarChart');
-    const ctx = canvas.getContext('2d');
-
-    if (solarChartInstance) {
-      solarChartInstance.destroy();
-      solarChartInstance = null;
-    }
-
-    // Combine all unique labels (years) from all datasets
-    const combinedLabels = Array.from(new Set(chartDataArray.flatMap(data => data.labels))).sort();
-
-    // Align each dataset's values with the combinedLabels array
-    const datasets = chartDataArray.map((chartData, index) => {
-      const values = combinedLabels.map(label => {
-        const labelIndex = chartData.labels.indexOf(label);
-        return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing years
-      });
-
-      return {
-        label: cityNames[index], // Use city name for the legend
-        data: values,
-        borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
-        borderWidth: 2,
-        fill: false
-      };
-    });
-
-    // Create the chart
-    solarChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: combinedLabels,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Year'
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Average Solar Exposure (MJ/m²)'
-            }
-          }
-        }
-      }
-    });
-  }
-
-  // Export chart as PNG/JPG
-  exportImageButton.addEventListener('click', function () {
-    const canvas = document.getElementById('solarChart');
-    canvas.toBlob(function (blob) {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'solar_analysis.png'; // Default filename
-      link.click();
-    }, 'image/png');
-  });
 });
