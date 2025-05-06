@@ -299,6 +299,43 @@ yearDropdown.addEventListener('change', function () {
       };
     });
 
+    // Calculate average, max, and min values across all datasets
+    const allValues = chartDataArray.flatMap(chartData => chartData.values).filter(value => value !== null);
+    const average = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+    const max = Math.max(...allValues);
+    const min = Math.min(...allValues);
+
+    // Add average, max, and min lines
+    const averageLine = {
+      label: 'Average',
+      data: combinedLabels.map(() => average),
+      borderColor: 'rgba(54, 162, 235, 0.8)', // Blue
+      borderWidth: 2,
+      borderDash: [10, 5], // Dashed line
+      fill: false
+    };
+
+    const maxLine = {
+      label: 'Maximum',
+      data: combinedLabels.map(() => max),
+      borderColor: 'rgba(75, 192, 192, 0.8)', // Green
+      borderWidth: 2,
+      borderDash: [10, 5], // Dashed line
+      fill: false
+    };
+
+    const minLine = {
+      label: 'Minimum',
+      data: combinedLabels.map(() => min),
+      borderColor: 'rgba(255, 99, 132, 0.8)', // Red
+      borderWidth: 2,
+      borderDash: [10, 5], // Dashed line
+      fill: false
+    };
+
+    // Add the lines to the datasets
+    datasets.push(averageLine, maxLine, minLine);
+
     solarChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -307,6 +344,16 @@ yearDropdown.addEventListener('change', function () {
       },
       options: {
         responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const value = context.raw;
+                return value !== null ? `Value: ${value.toFixed(2)}` : 'No Data';
+              }
+            }
+          }
+        },
         scales: {
           x: {
             title: {
@@ -324,7 +371,6 @@ yearDropdown.addEventListener('change', function () {
       }
     });
   }
-
   // Export chart as PDF
   const { jsPDF } = window.jspdf;
 
