@@ -380,11 +380,8 @@ def visualisation():
     )
     current_app.logger.info(f"Public files: {public_files}")
 
-    # Combine all files and remove duplicates based on file ID
-    all_files = private_files + shared_files + public_files
-    unique_files = {file.id: file for file in all_files}.values()  # Use a dictionary to ensure uniqueness by file ID
-
-    return render_template('visualisation.html', uploaded_files=unique_files)
+    uploaded_files = private_files + shared_files + public_files
+    return render_template('visualisation.html', uploaded_files=uploaded_files)
 # ================================
 # Get file data for visualisation
 # ================================
