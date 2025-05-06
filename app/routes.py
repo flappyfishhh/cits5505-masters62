@@ -17,6 +17,12 @@ from app.forms import (
     ForgotPasswordForm, ResetPasswordForm,
     UpdateEmailForm, ChangePasswordForm, UpdateFileForm
 )
+from app.forms import VisualizationForm
+import pandas as pd
+import plotly.graph_objs as go
+from flask import session 
+from flask import render_template, request
+import json
 
 # ================================
 # Upload Blueprint
@@ -349,6 +355,7 @@ def profile():
         return redirect(url_for('main.profile'))
 
     return render_template('profile.html', email_form=email_form, pw_form=pw_form)
+
 # ================================
 # Rendering visualisation page
 # ================================
@@ -385,6 +392,7 @@ def visualisation():
     unique_files = {file.id: file for file in all_files}.values()  # Use a dictionary to ensure uniqueness by file ID
 
     return render_template('visualisation.html', uploaded_files=unique_files)
+
 # ================================
 # Get file data for visualisation
 # ================================
@@ -437,3 +445,114 @@ def get_file_data(file_id):
     current_app.logger.info(f"Prepared data: {data}")
 
     return jsonify({"filename": file_record.filename, "data": data})
+
+# ================================
+# Solar Data Visualization
+# ================================
+@main.route('/visualize/<int:file_id>', methods=['GET', 'POST'])
+@login_required
+def visualize(file_id):
+    form = VisualizationForm()
+    uploaded_file = FileUpload.query.get_or_404(file_id)
+
+    # Permission check
+    if uploaded_file.visibility == 'private' and uploaded_file.user_id != current_user.id:
+        flash('Private file. You do not have permission.', 'danger')
+        return redirect(url_for('main.index'))
+    elif uploaded_file.visibility == 'shared':
+        if current_user != uploaded_file.user and current_user not in uploaded_file.share_with:
+            flash('Shared file. You are not authorized.', 'danger')
+            return redirect(url_for('main.index'))
+
+    filepath = os.path.join(current_app.root_path, uploaded_file.filepath)
+
+    if not os.path.exists(filepath):
+        flash('Uploaded file not found.', 'danger')
+        return redirect(url_for('main.index'))
+# Step 1: Read the file
+    df = pd.read_csv(filepath)
+    #Step 2: Fix duplicate columns immediately
+    df.columns = pd.Series(df.columns).where(~pd.Series(df.columns).duplicated(), df.columns + '_' + pd.Series(df.columns).duplicated(keep=False).cumsum().astype(str))
+    # Step 3: Extract column names safely
+    columns = df.columns.tolist()
+    chart = None
+
+    if request.method == 'POST':
+        x_axis = request.form['x_axis']
+        y_axis = request.form['y_axis']
+        chart_type = request.form['chart_type']
+
+        # SAFE JSON CONVERSION
+        data = df[[x_axis, y_axis]].dropna().to_dict(orient='list')
+        
+      
+        
+        chart = {
+            'x': json.dumps(data[x_axis]),
+            'y': json.dumps(data[y_axis]),
+            'type': chart_type
+        }
+        
+
+    
+    return render_template('visualize.html', columns=columns, chart=chart, form=form, file_id=file_id)
+
+
+# ================================
+# Solar Data Analysis (Trend + Anomalies)
+# ================================
+@main.route('/solar_analysis/<int:file_id>')
+@login_required
+def solar_analysis(file_id):
+    uploaded_file = FileUpload.query.get_or_404(file_id)
+
+    filepath = os.path.join(current_app.root_path, uploaded_file.filepath)
+
+    if not os.path.exists(filepath):
+        flash('Uploaded file not found.', 'danger')
+        return redirect(url_for('main.index'))
+
+    # Read CSV
+    df = pd.read_csv(filepath)
+
+    # Remove duplicate columns 
+    df.columns = pd.Series(df.columns).where(~pd.Series(df.columns).duplicated(), df.columns + '_' + pd.Series(df.columns).duplicated(keep=False).cumsum().astype(str))
+
+    trend_plot = None
+    seasonal_patterns = None
+    anomalies = None
+
+    if {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}.issubset(df.columns):
+        df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
+
+        monthly_avg = df.groupby(df['Date'].dt.to_period('M'))['Daily global solar exposure (MJ/m*m)'].mean()
+        monthly_avg.index = monthly_avg.index.to_timestamp()
+
+        seasonal_patterns = df.groupby('Month')['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
+
+        Q1 = monthly_avg.quantile(0.25)
+        Q3 = monthly_avg.quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        anomalies = monthly_avg[(monthly_avg < lower_bound) | (monthly_avg > upper_bound)].round(2).to_dict()
+
+        trend_fig = go.Figure()
+        trend_fig.add_trace(go.Scatter(
+            x=monthly_avg.index,
+            y=monthly_avg.values,
+            mode='lines+markers',
+            name='Monthly Avg Solar Exposure'
+        ))
+        trend_fig.update_layout(
+            title='Monthly Average Solar Exposure Over Time',
+            xaxis_title='Date',
+            yaxis_title='Daily Global Solar Exposure (MJ/m²)',
+            height=500
+        )
+        trend_plot = trend_fig.to_html(full_html=False)
+
+    return render_template('analysis.html',
+                           seasonal_patterns=seasonal_patterns,
+                           anomalies=anomalies,
+                           trend_plot=trend_plot)
