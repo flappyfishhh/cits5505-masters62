@@ -4,6 +4,7 @@ $(function () {
     $('.flashes').fadeOut();
   }, 3000);
 
+  // Initialize the dropdowns
   const dropdownContainer = document.getElementById('dropdown-container');
   const addCityCheckbox = document.getElementById('add-city-checkbox');
   const visualizeButton = document.getElementById('visualize-datasets');
@@ -14,16 +15,18 @@ $(function () {
 
   // Function to update dropdown options dynamically
   function updateDropdownOptions() {
+    // Get all selected values from the dropdowns
     const selectedValues = Array.from(dropdownContainer.querySelectorAll('select'))
       .map(dropdown => dropdown.value)
-      .filter(value => value); // Get all selected values
-
+      .filter(value => value); // Filter out empty values
+  
     // Loop through all dropdowns and update their options
     dropdownContainer.querySelectorAll('select').forEach(dropdown => {
       const currentValue = dropdown.value; // Preserve the current value
       const options = dropdown.querySelectorAll('option');
-
+  
       options.forEach(option => {
+        // Hide the option if it is selected in another dropdown and not the current value
         if (selectedValues.includes(option.value) && option.value !== currentValue) {
           option.style.display = 'none'; // Hide already-selected options
         } else {
