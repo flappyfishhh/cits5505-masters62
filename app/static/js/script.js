@@ -12,6 +12,27 @@ $(function () {
   let solarChartInstance = null; // Declare the chart instance only once
   let dropdownCount = 1; // Keep track of the number of dropdowns
 
+  // Function to update dropdown options dynamically
+  function updateDropdownOptions() {
+    const selectedValues = Array.from(dropdownContainer.querySelectorAll('select'))
+      .map(dropdown => dropdown.value)
+      .filter(value => value); // Get all selected values
+
+    // Loop through all dropdowns and update their options
+    dropdownContainer.querySelectorAll('select').forEach(dropdown => {
+      const currentValue = dropdown.value; // Preserve the current value
+      const options = dropdown.querySelectorAll('option');
+
+      options.forEach(option => {
+        if (selectedValues.includes(option.value) && option.value !== currentValue) {
+          option.style.display = 'none'; // Hide already-selected options
+        } else {
+          option.style.display = ''; // Show available options
+        }
+      });
+    });
+  }
+
   // Add event listener for the checkbox
   addCityCheckbox.addEventListener('change', function () {
     if (addCityCheckbox.checked && dropdownCount < 4) {
@@ -56,7 +77,17 @@ $(function () {
         if (dropdownCount < 4) {
           addCityCheckbox.disabled = false;
         }
+
+        // Update dropdown options after deletion
+        updateDropdownOptions();
       });
+
+      // Add event listener for the new dropdown to update options dynamically
+      const newSelect = newDropdown.querySelector('select');
+      newSelect.addEventListener('change', updateDropdownOptions);
+
+      // Update dropdown options after adding a new dropdown
+      updateDropdownOptions();
     }
   });
 
