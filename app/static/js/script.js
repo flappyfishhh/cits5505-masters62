@@ -119,7 +119,7 @@ $(function () {
           renderChart(chartDataArray, cityNames); // Pass city names to the renderChart function
         })
         .catch(error => {
-          console.error('Error fetching file data:', error);
+          //console.error('Error fetching file data:', error);
         });
     } else {
       alert('Please select at least one dataset.');
@@ -127,31 +127,24 @@ $(function () {
   });
 
   // Process file data for Chart.js (Yearly Averages)
-  // Process file data for Chart.js (Yearly Averages)
-function processFileData(fileData) {
-  const yearlyData = {};
+  function processFileData(fileData) {
+    const yearlyData = {};
 
-  // Aggregate data by year
-  fileData.forEach(row => {
-    if (row.solar_exposure !== null) {
-      const year = new Date(row.date).getFullYear();
-      if (!yearlyData[year]) {
-        yearlyData[year] = { total: 0, count: 0 };
+    fileData.forEach(row => {
+      if (row.solar_exposure !== null) {
+        const year = new Date(row.date).getFullYear();
+        if (!yearlyData[year]) {
+          yearlyData[year] = { total: 0, count: 0 };
+        }
+        yearlyData[year].total += row.solar_exposure;
+        yearlyData[year].count += 1;
       }
-      yearlyData[year].total += row.solar_exposure;
-      yearlyData[year].count += 1;
-    }
-  });
+    });
 
-  // Filter out years with fewer than 300 days of data
-  const filteredYears = Object.keys(yearlyData).filter(year => yearlyData[year].count >= 300);
-
-  // Prepare labels and values for Chart.js
-  const labels = filteredYears.sort();
-  const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
-
-  return { labels, values };
-}
+    const labels = Object.keys(yearlyData).sort();
+    const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
+    return { labels, values };
+  }
 
   // Render the chart using Chart.js
   function renderChart(chartDataArray, cityNames) {
@@ -208,6 +201,19 @@ function processFileData(fileData) {
       }
     });
   }
+
+    // jsPDF is already imported at the top of the file
+    const { jsPDF } = window.jspdf;
+    exportPdfButton.addEventListener('click', function () {
+      const canvas = document.getElementById('solarChart');
+      const chartImage = canvas.toDataURL('image/png', 1.0); // Convert chart to image
+  
+      const pdf = new jsPDF('landscape'); // Create a new PDF in landscape mode
+      pdf.setFontSize(18);
+      pdf.text('Solar Exposure Analysis', 10, 10); // Add a title
+      pdf.addImage(chartImage, 'PNG', 10, 20, 280, 150); // Add the chart image to the PDF
+      pdf.save('solar_analysis.pdf'); // Save the PDF
+    });
 
   // Export chart as PNG/JPG
   exportImageButton.addEventListener('click', function () {
