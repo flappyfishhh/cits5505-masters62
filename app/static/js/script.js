@@ -129,7 +129,8 @@ $(function () {
   // Process file data for Chart.js (Yearly Averages)
   function processFileData(fileData) {
     const yearlyData = {};
-
+  
+    // Aggregate data by year
     fileData.forEach(row => {
       if (row.solar_exposure !== null) {
         const year = new Date(row.date).getFullYear();
@@ -140,9 +141,14 @@ $(function () {
         yearlyData[year].count += 1;
       }
     });
-
-    const labels = Object.keys(yearlyData).sort();
+  
+    // Filter out years with fewer than 300 days of data
+    const filteredYears = Object.keys(yearlyData).filter(year => yearlyData[year].count >= 300);
+  
+    // Prepare labels and values for Chart.js
+    const labels = filteredYears.sort();
     const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
+  
     return { labels, values };
   }
 
