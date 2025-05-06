@@ -119,7 +119,7 @@ $(function () {
           renderChart(chartDataArray, cityNames); // Pass city names to the renderChart function
         })
         .catch(error => {
-          //console.error('Error fetching file data:', error);
+          console.error('Error fetching file data:', error);
         });
     } else {
       alert('Please select at least one dataset.');
@@ -202,18 +202,19 @@ $(function () {
     });
   }
 
-    // jsPDF is already imported at the top of the file
-    const { jsPDF } = window.jspdf;
-    exportPdfButton.addEventListener('click', function () {
-      const canvas = document.getElementById('solarChart');
-      const chartImage = canvas.toDataURL('image/png', 1.0); // Convert chart to image
-  
-      const pdf = new jsPDF('landscape'); // Create a new PDF in landscape mode
-      pdf.setFontSize(18);
-      pdf.text('Solar Exposure Analysis', 10, 10); // Add a title
-      pdf.addImage(chartImage, 'PNG', 10, 20, 280, 150); // Add the chart image to the PDF
-      pdf.save('solar_analysis.pdf'); // Save the PDF
-    });
+  // Export chart as PDF
+  const { jsPDF } = window.jspdf;
+
+  exportPdfButton.addEventListener('click', function () {
+    const canvas = document.getElementById('solarChart');
+    const chartImage = canvas.toDataURL('image/png', 1.0); // Convert chart to image
+
+    const pdf = new jsPDF('landscape'); // Create a new PDF in landscape mode
+    pdf.setFontSize(18);
+    pdf.text('Solar Exposure Analysis', 10, 10); // Add a title
+    pdf.addImage(chartImage, 'PNG', 10, 20, 280, 150); // Add the chart image to the PDF
+    pdf.save('solar_analysis.pdf'); // Save the PDF
+  });
 
   // Export chart as PNG/JPG
   exportImageButton.addEventListener('click', function () {
