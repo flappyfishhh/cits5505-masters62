@@ -4,29 +4,30 @@ $(function () {
     $('.flashes').fadeOut();
   }, 3000);
 
-  // Initialize the dropdowns
   const dropdownContainer = document.getElementById('dropdown-container');
   const addCityCheckbox = document.getElementById('add-city-checkbox');
   const visualizeButton = document.getElementById('visualize-datasets');
   const exportPdfButton = document.getElementById('export-pdf');
   const exportImageButton = document.getElementById('export-image');
+  const timeSpanButtons = document.querySelectorAll('.time-span-button'); // Buttons for time spans
+  const yearDropdown = document.getElementById('year-select'); // Year dropdown
+  const loadDatasetButton = document.getElementById('load-dataset'); // Load Dataset button
   let solarChartInstance = null; // Declare the chart instance only once
   let dropdownCount = 1; // Keep track of the number of dropdowns
+  let selectedTimeSpan = 'year'; // Default time span
+  let selectedYear = null; // Store the selected year
 
   // Function to update dropdown options dynamically
   function updateDropdownOptions() {
-    // Get all selected values from the dropdowns
     const selectedValues = Array.from(dropdownContainer.querySelectorAll('select'))
       .map(dropdown => dropdown.value)
       .filter(value => value); // Filter out empty values
-  
-    // Loop through all dropdowns and update their options
+
     dropdownContainer.querySelectorAll('select').forEach(dropdown => {
       const currentValue = dropdown.value; // Preserve the current value
       const options = dropdown.querySelectorAll('option');
-  
+
       options.forEach(option => {
-        // Hide the option if it is selected in another dropdown and not the current value
         if (selectedValues.includes(option.value) && option.value !== currentValue) {
           option.style.display = 'none'; // Hide already-selected options
         } else {
@@ -36,7 +37,17 @@ $(function () {
     });
   }
 
-  // Add event listener for the checkbox
+  // Add event listener for time span buttons
+  timeSpanButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      // Remove active class from all buttons and add it to the clicked button
+      timeSpanButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      selectedTimeSpan = this.getAttribute('data-timespan');
+    });
+  });
+
+  // Add event listener for the "Add another city" checkbox
   addCityCheckbox.addEventListener('change', function () {
     if (addCityCheckbox.checked && dropdownCount < 4) {
       dropdownCount++;
@@ -94,6 +105,76 @@ $(function () {
     }
   });
 
+// Populate the year dropdown dynamically based on available data
+function populateYearDropdown(dataArray) {
+  const allYears = new Set();
+
+  dataArray.forEach(data => {
+    data.data.forEach(row => {
+      const year = new Date(row.date).getFullYear();
+      allYears.add(year);
+    });
+  });
+
+  const sortedYears = Array.from(allYears).sort();
+  yearDropdown.innerHTML = `
+    <option value="" disabled selected>Select a year</option>
+    <option value="all">Select All</option>
+  `; // Reset dropdown and add "Select All"
+
+  sortedYears.forEach(year => {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    yearDropdown.appendChild(option);
+  });
+}
+
+// Add event listener for year selection
+yearDropdown.addEventListener('change', function () {
+  selectedYear = this.value === "all" ? null : parseInt(this.value, 10); // If "Select All" is chosen, set selectedYear to null
+});
+
+
+  // Add event listener for the "Load Dataset" button
+  loadDatasetButton.addEventListener('click', function () {
+    const selectedFileIds = [];
+    const dropdowns = dropdownContainer.querySelectorAll('select');
+
+    // Collect selected file IDs from dropdowns
+    dropdowns.forEach((dropdown) => {
+      if (dropdown && dropdown.value) {
+        selectedFileIds.push(dropdown.value);
+      }
+    });
+
+    if (selectedFileIds.length > 0) {
+      const fetchPromises = selectedFileIds.map(fileId =>
+        fetch(`/get-file-data/${fileId}`).then(response => {
+          if (!response.ok) throw new Error(`Failed to fetch file data for ${fileId}`);
+          return response.json();
+        })
+      );
+
+      Promise.all(fetchPromises)
+        .then(dataArray => {
+          populateYearDropdown(dataArray); // Populate the year dropdown dynamically
+          alert('Dataset loaded successfully! Select a year to visualize.');
+        })
+        .catch(error => {
+          console.error('Error loading dataset:', error);
+          alert('Failed to load dataset. Please try again.');
+        });
+    } else {
+      alert('Please select at least one dataset to load.');
+    }
+  });
+
+  // Add event listener for year selection
+  yearDropdown.addEventListener('change', function () {
+    selectedYear = parseInt(this.value, 10); // Store the selected year
+  });
+
   // Add event listener for the visualize button
   visualizeButton.addEventListener('click', function () {
     const selectedFileIds = [];
@@ -118,7 +199,18 @@ $(function () {
 
       Promise.all(fetchPromises)
         .then(dataArray => {
-          const chartDataArray = dataArray.map(data => processFileData(data.data));
+          // Filter data based on the selected year
+          const filteredDataArray = dataArray.map(data => {
+            return {
+              ...data,
+              data: data.data.filter(row => {
+                const year = new Date(row.date).getFullYear();
+                return selectedYear ? year === selectedYear : true; // Filter by year if selected
+              })
+            };
+          });
+
+          const chartDataArray = filteredDataArray.map(data => processFileData(data.data, selectedTimeSpan));
           renderChart(chartDataArray, cityNames); // Pass city names to the renderChart function
         })
         .catch(error => {
@@ -129,23 +221,54 @@ $(function () {
     }
   });
 
-  // Process file data for Chart.js (Yearly Averages)
-  function processFileData(fileData) {
-    const yearlyData = {};
+  // Process file data for Chart.js based on the selected time span
+  function processFileData(fileData, timeSpan) {
+    const groupedData = {};
 
     fileData.forEach(row => {
       if (row.solar_exposure !== null) {
-        const year = new Date(row.date).getFullYear();
-        if (!yearlyData[year]) {
-          yearlyData[year] = { total: 0, count: 0 };
+        const date = new Date(row.date);
+        let key;
+
+        // Group data based on the selected time span
+        switch (timeSpan) {
+          case 'year':
+            key = date.getFullYear();
+            break;
+          case '6months':
+            key = `${date.getFullYear()}-${Math.ceil((date.getMonth() + 1) / 6)}`; // 1 or 2 for first/second half
+            break;
+          case 'month':
+            key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`; // Year-Month (e.g., "2025-01")
+            break;
+          case 'week':
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay()); // Start of the week (Sunday)
+            key = weekStart.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            break;
+          case 'day':
+            key = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            break;
+          default:
+            key = date.getFullYear();
         }
-        yearlyData[year].total += row.solar_exposure;
-        yearlyData[year].count += 1;
+
+        if (!groupedData[key]) {
+          groupedData[key] = { total: 0, count: 0 };
+        }
+        groupedData[key].total += row.solar_exposure;
+        groupedData[key].count += 1;
       }
     });
 
-    const labels = Object.keys(yearlyData).sort();
-    const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
+    const labels = Object.keys(groupedData).sort((a, b) => {
+      if (timeSpan === 'month') {
+        return new Date(a).getTime() - new Date(b).getTime(); // Sort by date for months
+      }
+      return a.localeCompare(b, undefined, { numeric: true }); // Numeric sort for other cases
+    });
+
+    const values = labels.map(key => parseFloat((groupedData[key].total / groupedData[key].count).toFixed(2)));
     return { labels, values };
   }
 
@@ -159,18 +282,16 @@ $(function () {
       solarChartInstance = null;
     }
 
-    // Combine all unique labels (years) from all datasets
     const combinedLabels = Array.from(new Set(chartDataArray.flatMap(data => data.labels))).sort();
 
-    // Align each dataset's values with the combinedLabels array
     const datasets = chartDataArray.map((chartData, index) => {
       const values = combinedLabels.map(label => {
         const labelIndex = chartData.labels.indexOf(label);
-        return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing years
+        return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing labels
       });
 
       return {
-        label: cityNames[index], // Use city name for the legend
+        label: cityNames[index],
         data: values,
         borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
         borderWidth: 2,
@@ -178,7 +299,6 @@ $(function () {
       };
     });
 
-    // Create the chart
     solarChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -191,7 +311,7 @@ $(function () {
           x: {
             title: {
               display: true,
-              text: 'Year'
+              text: 'Time'
             }
           },
           y: {

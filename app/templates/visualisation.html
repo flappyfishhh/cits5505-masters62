@@ -26,19 +26,44 @@
     <label for="add-city-checkbox" class="text-lg font-medium">Add another city</label>
   </div>
 
-  <!-- Button for visualizing datasets -->
-  <button id="visualize-datasets" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md">Visualise</button>
+  <div class="mt-4">
+    <button id="load-dataset" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Load Dataset</button>
+  </div>
+  
+  <div id="year-dropdown-container" class="mt-4">
+    <label for="year-select" class="block text-lg font-medium mb-2">Select a Year:</label>
+    <select id="year-select" class="border border-gray-300 rounded-md p-2 w-full">
+      <option value="" disabled selected>Select a year</option>
+      <!-- Years will be dynamically populated by JavaScript -->
+    </select>
+  </div>
+  
+  <!-- Time span buttons -->
+  <div class="time-span-buttons mt-4">
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md active" data-timespan="year">Year</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="6months">6 Months</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="month">Month</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="week">Week</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="day">Day</button>
+  </div>
 
+ 
+
+  <!-- Button for visualizing datasets -->
+  <button id="visualize-datasets" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md mt-4">Visualise</button>
+  
   <!-- Chart container -->
   <div class="mt-8">
     <canvas id="solarChart" width="800" height="400"></canvas>
   </div>
 </div>
+
 <!-- Add export buttons below the chart -->
 <div class="mt-4 flex space-x-4">
-  <button id="export-pdf" class="bg-green-500 text-white px-4 py-2 rounded-md">Export as PDF</button>
-  <button id="export-image" class="bg-blue-500 text-white px-4 py-2 rounded-md">Export as PNG/JPG</button>
+  <button id="export-pdf" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Export as PDF</button>
+  <button id="export-image" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Export as PNG/JPG</button>
 </div>
+
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.1/jspdf.umd.min.js"></script>
