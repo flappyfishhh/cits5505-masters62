@@ -127,24 +127,31 @@ $(function () {
   });
 
   // Process file data for Chart.js (Yearly Averages)
-  function processFileData(fileData) {
-    const yearlyData = {};
+  // Process file data for Chart.js (Yearly Averages)
+function processFileData(fileData) {
+  const yearlyData = {};
 
-    fileData.forEach(row => {
-      if (row.solar_exposure !== null) {
-        const year = new Date(row.date).getFullYear();
-        if (!yearlyData[year]) {
-          yearlyData[year] = { total: 0, count: 0 };
-        }
-        yearlyData[year].total += row.solar_exposure;
-        yearlyData[year].count += 1;
+  // Aggregate data by year
+  fileData.forEach(row => {
+    if (row.solar_exposure !== null) {
+      const year = new Date(row.date).getFullYear();
+      if (!yearlyData[year]) {
+        yearlyData[year] = { total: 0, count: 0 };
       }
-    });
+      yearlyData[year].total += row.solar_exposure;
+      yearlyData[year].count += 1;
+    }
+  });
 
-    const labels = Object.keys(yearlyData).sort();
-    const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
-    return { labels, values };
-  }
+  // Filter out years with fewer than 300 days of data
+  const filteredYears = Object.keys(yearlyData).filter(year => yearlyData[year].count >= 300);
+
+  // Prepare labels and values for Chart.js
+  const labels = filteredYears.sort();
+  const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
+
+  return { labels, values };
+}
 
   // Render the chart using Chart.js
   function renderChart(chartDataArray, cityNames) {
