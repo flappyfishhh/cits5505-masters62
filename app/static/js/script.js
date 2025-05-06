@@ -12,6 +12,8 @@ $(function () {
   const timeSpanButtons = document.querySelectorAll('.time-span-button'); // Buttons for time spans
   const yearDropdown = document.getElementById('year-select'); // Year dropdown
   const loadDatasetButton = document.getElementById('load-dataset'); // Load Dataset button
+  const clearChartButton = document.getElementById('clear-chart');
+
   let solarChartInstance = null; // Declare the chart instance only once
   let dropdownCount = 1; // Keep track of the number of dropdowns
   let selectedTimeSpan = 'year'; // Default time span
@@ -272,24 +274,24 @@ yearDropdown.addEventListener('change', function () {
     return { labels, values };
   }
 
-  // Render the chart using Chart.js
   function renderChart(chartDataArray, cityNames) {
     const canvas = document.getElementById('solarChart');
     const ctx = canvas.getContext('2d');
-
+  
+    // Destroy the existing chart instance if it exists
     if (solarChartInstance) {
       solarChartInstance.destroy();
       solarChartInstance = null;
     }
-
+  
     const combinedLabels = Array.from(new Set(chartDataArray.flatMap(data => data.labels))).sort();
-
+  
     const datasets = chartDataArray.map((chartData, index) => {
       const values = combinedLabels.map(label => {
         const labelIndex = chartData.labels.indexOf(label);
         return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing labels
       });
-
+  
       return {
         label: cityNames[index],
         data: values,
@@ -298,44 +300,7 @@ yearDropdown.addEventListener('change', function () {
         fill: false
       };
     });
-
-    // Calculate average, max, and min values across all datasets
-    const allValues = chartDataArray.flatMap(chartData => chartData.values).filter(value => value !== null);
-    const average = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
-    const max = Math.max(...allValues);
-    const min = Math.min(...allValues);
-
-    // Add average, max, and min lines
-    const averageLine = {
-      label: 'Average',
-      data: combinedLabels.map(() => average),
-      borderColor: 'rgba(54, 162, 235, 0.8)', // Blue
-      borderWidth: 2,
-      borderDash: [10, 5], // Dashed line
-      fill: false
-    };
-
-    const maxLine = {
-      label: 'Maximum',
-      data: combinedLabels.map(() => max),
-      borderColor: 'rgba(75, 192, 192, 0.8)', // Green
-      borderWidth: 2,
-      borderDash: [10, 5], // Dashed line
-      fill: false
-    };
-
-    const minLine = {
-      label: 'Minimum',
-      data: combinedLabels.map(() => min),
-      borderColor: 'rgba(255, 99, 132, 0.8)', // Red
-      borderWidth: 2,
-      borderDash: [10, 5], // Dashed line
-      fill: false
-    };
-
-    // Add the lines to the datasets
-    datasets.push(averageLine, maxLine, minLine);
-
+  
     solarChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -371,6 +336,25 @@ yearDropdown.addEventListener('change', function () {
       }
     });
   }
+
+  clearChartButton.addEventListener('click', function () {
+    if (solarChartInstance) {
+      solarChartInstance.destroy(); // Destroy the existing chart instance
+      solarChartInstance = null; // Reset the chart instance
+    }
+  
+    // Clear the canvas
+    const canvas = document.getElementById('solarChart');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    // Optionally, clear the region description
+    const descriptionContainer = document.getElementById('region-description');
+    if (descriptionContainer) {
+      descriptionContainer.innerHTML = '<p>Chart cleared. Please select a dataset to visualize.</p>';
+    }
+  });
+  
   // Export chart as PDF
   const { jsPDF } = window.jspdf;
 
