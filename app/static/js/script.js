@@ -145,4 +145,27 @@ $(function () {
     const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
     return { labels, values };
   }
+
+  // Export chart as PDF
+  exportPdfButton.addEventListener('click', function () {
+    const canvas = document.getElementById('solarChart');
+    const chartImage = canvas.toDataURL('image/png', 1.0); // Convert chart to image
+
+    const pdf = new jsPDF('landscape'); // Create a new PDF in landscape mode
+    pdf.setFontSize(18);
+    pdf.text('Solar Exposure Analysis', 10, 10); // Add a title
+    pdf.addImage(chartImage, 'PNG', 10, 20, 280, 150); // Add the chart image to the PDF
+    pdf.save('solar_analysis.pdf'); // Save the PDF
+  });
+
+  // Export chart as PNG/JPG
+  exportImageButton.addEventListener('click', function () {
+    const canvas = document.getElementById('solarChart');
+    canvas.toBlob(function (blob) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'solar_analysis.png'; // Default filename
+      link.click();
+    }, 'image/png');
+  });
 });
