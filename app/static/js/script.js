@@ -111,8 +111,7 @@ $(function () {
     });
 
     const labels = Object.keys(yearlyData).sort();
-    const values = labels.map(year => (yearlyData[year].total / yearlyData[year].count).toFixed(2));
-
+    const values = labels.map(year => parseFloat((yearlyData[year].total / yearlyData[year].count).toFixed(2)));
     return { labels, values };
   }
 
