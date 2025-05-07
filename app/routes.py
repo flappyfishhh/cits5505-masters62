@@ -1,6 +1,7 @@
 import os
 import csv
-from datetime import datetime, UTC
+from datetime import datetime, timezone, timedelta
+now = datetime.now(timezone.utc)
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
     request, current_app, send_from_directory, jsonify, abort
@@ -76,6 +77,8 @@ def login():
             flash('Invalid username or password')
             return redirect(url_for('main.login'))
         login_user(user, remember=form.remember_me.data)
+        user.last_login_time = datetime.now(timezone.utc)
+        db.session.commit()
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.dashboard')
@@ -96,7 +99,10 @@ def dashboard():
         .limit(5)
         .all()
     )
-    return render_template('dashboard.html', recent_uploads=recent_uploads)
+    now = datetime.now(timezone.utc)
+    last_login = current_user.last_login_time + timedelta(hours=8)
+    formatted_last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+    return render_template('dashboard.html', recent_uploads=recent_uploads, now=now, last_login=formatted_last_login)
 
 # ================================
 # User Logout

@@ -4,7 +4,40 @@
 
 {% block content %}
 <div class="dashboard-container p-6">
-  <h2 class="text-3xl font-bold mb-6">Welcome to your Dashboard</h2>
+  <!-- Personalized Welcome Message -->
+  <h2 class="text-3xl font-bold mb-6 text-gray-900">
+    {% if current_user.is_authenticated %}
+      {% if now.hour < 12 %}
+        Good morning, {{ current_user.username }}!
+      {% elif now.hour < 18 %}
+        Good afternoon, {{ current_user.username }}!
+      {% else %}
+        Good evening, {{ current_user.username }}!
+      {% endif %}
+    {% else %}
+      Welcome to your Dashboard!
+    {% endif %}
+  </h2>
+
+  <!-- Quick Stats Overview -->
+  <div class="quick-stats grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+      <h3 class="text-lg font-semibold mb-2">Last Login</h3>
+      <p class="text-xl">{{ last_login }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+      <h3 class="text-lg font-semibold mb-2">Quick Action</h3>
+      <a href="{{ url_for('main.upload') }}" class="text-blue-500 hover:underline">Upload New Data</a>
+    </div>
+  </div>
+
+  <!-- Friendly Tips Section -->
+  <div class="tips bg-white p-6 rounded-lg shadow-lg mb-8">
+    <h3 class="text-xl font-semibold mb-4">Friendly Tip of the Day</h3>
+    <p>Did you know? The BOM Solar Exposure Maps provide valuable insights into solar radiation levels across Australia.</p>
+  </div>
+
+  <!-- Recent Uploads Section -->
   <div class="recent-uploads mb-8">
     <h3 class="text-xl font-semibold mb-4">Recent Uploads</h3>
     <ul class="list-none space-y-4">
@@ -19,6 +52,5 @@
       {% endfor %}
     </ul>
   </div>
-  <!-- Add more sections as needed for additional dashboard data -->
 </div>
 {% endblock %}

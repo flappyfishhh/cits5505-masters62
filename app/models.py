@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     security_answer_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    last_login_time = db.Column(db.DateTime)
 
     # One-to-many: user owns many uploaded files
     files = db.relationship('FileUpload', back_populates='user', cascade='all, delete-orphan')
