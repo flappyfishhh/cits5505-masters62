@@ -1,75 +1,78 @@
 import os
-import time
 import pytest
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from app import create_app, db
-
-@pytest.fixture(scope="module")
-def app():
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "LIVESERVER_PORT": 8943,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "WTF_CSRF_ENABLED": False,
-        "SECRET_KEY": "testkey"
-    })
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.session.remove()
-        db.drop_all()
-
-@pytest.fixture(scope="module")
-def driver():
-    options = Options()
-    options.add_argument("--headless")
-    driver = WebDriver(service=Service(ChromeDriverManager().install()), options=options)
-    yield driver
-    driver.quit()
 
 BASE_URL = "http://localhost:8943"
+TEST_CSV_PATH = os.path.abspath(os.path.join("tests", "assets", "IDCJAC0016_009021_1800_Data.csv"))
 
-# ---------- Test 1: Register ----------
+# Helper function
+def login(driver, username, password):
+    driver.get(f"{BASE_URL}/login")
+    driver.find_element(By.NAME, "username").send_keys(username)
+    driver.find_element(By.NAME, "password").send_keys(password)
+    driver.find_element(By.NAME, "submit").click()
+    WebDriverWait(driver, 5).until(EC.url_contains("/dashboard"))
+
+# 1. Register a new user
 def test_register(driver, start_test_server):
-    driver.get("http://localhost:8943/register")
-
-    driver.find_element(By.NAME, "username").send_keys("admintest")
-    driver.find_element(By.NAME, "email").send_keys("admintest@example.com")
-    driver.find_element(By.NAME, "password").send_keys("admin123")
-    driver.find_element(By.NAME, "password2").send_keys("admin123")
-    driver.find_element(By.NAME, "security_answer").send_keys("saturn")
+    driver.get(f"{BASE_URL}/register")
+    driver.find_element(By.NAME, "username").send_keys("testuser1")
+    driver.find_element(By.NAME, "email").send_keys("test1@example.com")
+    driver.find_element(By.NAME, "password").send_keys("password123")
+    driver.find_element(By.NAME, "password2").send_keys("password123")
+    driver.find_element(By.NAME, "security_answer").send_keys("cookie")
     driver.find_element(By.NAME, "submit").click()
+    WebDriverWait(driver, 5).until(EC.url_contains("/login"))
+    assert "login" in driver.current_url
 
-    # You get redirected after registration
-    assert "login" in driver.current_url.lower()
-
-# ---------- Test 2: Login ----------
+# 2. Login the registered user
 def test_login(driver, start_test_server):
-    driver.get(BASE_URL + "/logout")  # Ensure logged out first
-    driver.get(BASE_URL + "/login")
-    driver.find_element(By.NAME, "username").send_keys("admintest")
-    driver.find_element(By.NAME, "password").send_keys("admin123")
+    login(driver, "testuser1", "password123")
+    assert "Dashboard" in driver.page_source
+
+# 3. Upload a CSV file
+def test_upload(driver, start_test_server):
+    login(driver, "testuser1", "password123")
+    driver.get(f"{BASE_URL}/upload")
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, "csv_file")))
+    driver.find_element(By.NAME, "city").send_keys("Perth")
+    driver.find_element(By.NAME, "latitude").send_keys("-31.95")
+    driver.find_element(By.NAME, "longitude").send_keys("115.86")
+    driver.find_element(By.NAME, "csv_file").send_keys(TEST_CSV_PATH)
     driver.find_element(By.NAME, "submit").click()
-    time.sleep(1)
-    assert "Dashboard" in driver.page_source or "dashboard" in driver.current_url
+    WebDriverWait(driver, 5).until(EC.url_contains("/index"))
+    assert "my files" in driver.page_source.lower()
 
-# ---------- Test 3: Upload CSV ----------
-def test_upload_csv(driver, start_test_server):
-    driver.get("http://localhost:8943/upload")
+# 4. Change file to public and check visibility
+def test_update_visibility(driver, start_test_server):
+    from selenium.webdriver.support.ui import Select
 
-    # Point to one of your actual test CSV files
-    test_csv_path = os.path.abspath(os.path.join("tests", "assets", "IDCJAC0016_009021_1800_Data.csv"))
-    driver.find_element(By.NAME, "csv_file").send_keys(test_csv_path)
+    login(driver, "testuser1", "password123")
+    driver.get(f"{BASE_URL}/index")
 
-    driver.find_element(By.NAME, "city").send_keys("PERTH")
-    driver.find_element(By.NAME, "latitude").send_keys("-31.93")
-    driver.find_element(By.NAME, "longitude").send_keys("115.98")
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.LINK_TEXT, "Update")))
+    driver.find_elements(By.LINK_TEXT, "Update")[0].click()
+
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, "visibility")))
+    Select(driver.find_element(By.NAME, "visibility")).select_by_value("public")
+
+    driver.find_element(By.XPATH, "//button[text()='Save Permissions']").click()
+    WebDriverWait(driver, 5).until(EC.url_contains("/index"))
+
+    assert "Permissions updated" in driver.page_source or "my files" in driver.page_source.lower()
+
+# 5. Forgot password flow
+def test_forgot_password(driver, start_test_server):
+    driver.get(f"{BASE_URL}/forgot_password")
+    driver.find_element(By.NAME, "email").send_keys("test1@example.com")
     driver.find_element(By.NAME, "submit").click()
-    assert "your files" in driver.title.lower() or "index" in driver.current_url
+    WebDriverWait(driver, 5).until(EC.url_contains("/reset_password"))
+    driver.find_element(By.NAME, "security_answer").send_keys("cookie")
+    driver.find_element(By.NAME, "new_password").send_keys("newpass123")
+    driver.find_element(By.NAME, "new_password2").send_keys("newpass123")
+    driver.find_element(By.NAME, "submit").click()
+    WebDriverWait(driver, 5).until(EC.url_contains("/login"))
+    assert "reset" in driver.page_source.lower()
+    
