@@ -1,7 +1,7 @@
 :root {
     --primary-color: #4f46e5;
     --primary-hover: #4338ca;
-    --bg-light: #f3f4f6;
+    --bg-light: #f9fafb;
     --bg-white: #ffffff;
     --text-color: #1f2937;
     --muted-color: #6b7280;
@@ -90,7 +90,30 @@
   .form-group {
     margin-bottom: 1rem;
   }
-  
+
+  .custom-bg {
+    background-color: var(--bg-light);
+  }
+  .custom-text {
+    color: var(--text-color);
+  }
+  .custom-card {
+    background-color: var(--bg-white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .custom-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+  .custom-btn:hover {
+    background-color: var(--primary-hover);
+  }
+
   input[type="text"],
   input[type="password"],
   input[type="email"],

@@ -3,22 +3,26 @@
 {% block title %}Dashboard | SolarAnalytics{% endblock %}
 
 {% block content %}
-<div class="dashboard-container p-6">
-  <h2 class="text-3xl font-bold mb-6">Welcome to your Dashboard</h2>
-  <div class="recent-uploads mb-8">
-    <h3 class="text-xl font-semibold mb-4">Recent Uploads</h3>
-    <ul class="list-none space-y-4">
-      {% for file in recent_uploads %}
-      <li class="bg-white shadow-md p-4 rounded-lg">
-        <h4 class="font-bold">{{ file.filename }}</h4>
-        <p class="text-sm text-gray-500">Uploaded on: {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="text-blue-500">View File</a>
-      </li>
-      {% else %}
-      <li>No recent uploads found.</li>
-      {% endfor %}
-    </ul>
+<main class="flex justify-center px-4 py-12 sm:py-16 lg:py-20">
+  <div class="backdrop-blur-md bg-white/5 p-6 sm:p-8 rounded-2xl shadow-2xl max-w-4xl w-full border border-white/10 text-white">
+    <h2 class="text-3xl sm:text-4xl font-extrabold mb-6 text-[var(--primary-color)] text-center">Welcome to your Dashboard</h2>
+
+    <div class="recent-uploads mb-8">
+      <h3 class="text-xl font-semibold mb-4 text-white">Recent Uploads</h3>
+      <ul class="list-none space-y-4">
+        {% for file in recent_uploads %}
+        <li class="bg-white/10 border border-white/20 p-4 rounded-lg shadow-sm">
+          <h4 class="font-semibold text-lg text-white">{{ file.filename }}</h4>
+          <p class="text-sm text-[var(--muted-color)]">Uploaded on: {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+          <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="text-[var(--primary-color)] hover:underline">View File</a>
+        </li>
+        {% else %}
+        <li class="text-[var(--muted-color)]">No recent uploads found.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Add more dashboard sections here -->
   </div>
-  <!-- Add more sections as needed for additional dashboard data -->
-</div>
+</main>
 {% endblock %}
