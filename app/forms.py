@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Op
 from app.models import User
 from flask_login import current_user
 from flask_wtf import FlaskForm
-
+from wtforms import SelectField, SubmitField
 # =============================
 # User Registration Form
 # =============================
@@ -131,4 +131,6 @@ class UpdateFileForm(FlaskForm):
 # Empty form, just for CSRF protection.
 # =============================
 class VisualizationForm(FlaskForm):
-    pass
+    x_axis = SelectField("X Axis", choices=[])  # choices will be set dynamically in the route
+    y_axis = SelectField("Y Axis", choices=[])
+    submit = SubmitField("Generate Chart")

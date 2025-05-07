@@ -94,7 +94,9 @@
 
     {% if chart %}
     <h2 style="margin-top: 30px;" id="chart_title">Chart Preview</h2>
-    <div id="chart"></div>
+    <div id="chart-container">
+        {{ chart|safe }}
+    </div>
 
     <script>
         function showToast() {
@@ -107,37 +109,21 @@
             document.getElementById('chart_title').scrollIntoView({ behavior: 'smooth' });
         }
 
-        var data = [{
-            x: JSON.parse({{ chart.x|tojson|safe }}),
-            y: JSON.parse({{ chart.y|tojson|safe }}),
-            type: '{{ chart.type }}'
-        }];
-
-        Plotly.newPlot('chart', data, {
-            title: 'Generated Chart',
-            xaxis: { title: 'X Axis' },
-            yaxis: { title: 'Y Axis' }
-        }).then(function() {
-            showToast();
-            scrollToChart();
-        });
+        showToast();
+        scrollToChart();
     </script>
     {% endif %}
 
     <br><br>
- <div style="display: flex; justify-content: space-between; margin-top: 40px;">
-    <a href="{{ url_for('main.index') }}">
-        <button class="btn">Back to Dashboard</button>
-    </a>
-    
-<a href="{{ url_for('main.solar_analysis', file_id=file_id) }}">
-    <button class="btn">Go to Analysis</button>
-</a>
+    <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+        <a href="{{ url_for('main.index') }}">
+            <button class="btn">Back to Dashboard</button>
+        </a>
 
-	
-</div>
-
-
+        <a href="{{ url_for('main.solar_analysis', file_id=file_id) }}">
+            <button class="btn">View Trend & Anomaly Analysis</button>
+        </a>
+    </div>
 </div>
 </body>
 </html>
