@@ -129,7 +129,9 @@ def forgot_password():
 def reset_password(user_id):
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    user = User.query.get_or_404(user_id)
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404)
     form = ResetPasswordForm()
     if form.validate_on_submit():
         if not user.check_security_answer(form.security_answer.data):
@@ -184,7 +186,8 @@ def view_file(file_id):
     headers = list(uploads[0].data.keys()) if uploads else []
     rows = [list(u.data.values()) for u in uploads] if uploads else []
 
-    return render_template('view_file.html', file=f, headers=headers, rows=rows, owner=User.query.get(f.user_id), shared_users=f.share_with if f.visibility == 'shared' else [])
+    owner = db.session.get(User, f.user_id)
+    return render_template('view_file.html', file=f, headers=headers, rows=rows, owner=owner, shared_users=f.share_with if f.visibility == 'shared' else [])
 
 # ================================
 # Delete uploaded file (only by owner)
