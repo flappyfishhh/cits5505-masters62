@@ -20,21 +20,23 @@
 
       {% if file.visibility %}
       <!-- Share With -->
-      <div>
-        {{ form.share_with.label(class="block mb-1 font-medium") }}
-        <div class="flex flex-col sm:flex-row gap-4">
-          {{ form.share_with(
-            class="flex-1 px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]",
-            placeholder="Comma-separated emails (e.g. user1@example.com)"
-          ) }}
-          <button type="button" class="btn-gradient px-5 py-2 rounded shadow" onclick="updateShares()">
-            Update Sharing
-          </button>
+      <div id="shareWithSection" class="hidden">
+        <div>
+          {{ form.share_with.label(class="block mb-1 font-medium") }}
+          <div class="flex flex-col sm:flex-row gap-4">
+            {{ form.share_with(
+              class="flex-1 px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]",
+              placeholder="Comma-separated emails (e.g. user1@example.com)"
+            ) }}
+            <button type="button" class="btn-gradient px-5 py-2 rounded shadow" onclick="updateShares()">
+              Update Sharing
+            </button>
+          </div>
+          {% for error in form.share_with.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ error }}</div>
+          {% endfor %}
+          <small class="text-[var(--muted-color)]">Note: You cannot share with yourself</small>
         </div>
-        {% for error in form.share_with.errors %}
-          <div class="text-red-500 text-sm mt-1">{{ error }}</div>
-        {% endfor %}
-        <small class="text-[var(--muted-color)]">Note: You cannot share with yourself</small>
       </div>
 
       <!-- Currently Shared Users -->
@@ -70,9 +72,20 @@
 
 <script>
   function updateShares() {
+    const form = document.getElementById("permissionsForm");
+    const input = form.querySelector('[name="share_with"]');
+    const emails = input.value.split(',').map(e => e.trim()).filter(e => e);
+
+    const currentUserEmail = "{{ current_user.email }}"; 
+
+    //check self email
+    if (emails.includes(currentUserEmail)) {
+      alert("You cannot share the file with yourself.");
+      return;
+    }
     fetch("{{ url_for('main.update_file', file_id=file.id) }}", {
       method: "POST",
-      body: new FormData(document.getElementById("permissionsForm")),
+      body: new FormData(form),
       headers: {
         Accept: "application/json",
       },
@@ -82,7 +95,58 @@
       if (data.success) {
         location.reload();
       } else {
-        alert("Error: " + (data.message || "Failed to update shares"));
+        const errorMessages = Object.values(data.errors || {}).flat().join('\n');
+        alert("Error: " + (errorMessages || data.message || "Failed to update shares"));
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("An error occurred while updating shares");
+    });
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    const visibilitySelect = document.querySelector('[name="visibility"]');
+    const shareWithSection = document.getElementById("shareWithSection");
+
+    function toggleShareSection() {
+      if (visibilitySelect.value === "shared") {
+        shareWithSection.classList.remove("hidden");
+      } else {
+        shareWithSection.classList.add("hidden");
+      }
+    }
+
+    // check value when initialize
+    toggleShareSection();
+
+    visibilitySelect.addEventListener("change", toggleShareSection);
+  });
+
+  function updateShares() {
+    const form = document.getElementById("permissionsForm");
+    const input = form.querySelector('[name="share_with"]');
+    const emails = input.value.split(',').map(e => e.trim()).filter(e => e);
+    const currentUserEmail = "{{ current_user.email }}";
+
+    if (emails.includes(currentUserEmail)) {
+      alert("You cannot share the file with yourself.");
+      return;
+    }
+
+    fetch("{{ url_for('main.update_file', file_id=file.id) }}", {
+      method: "POST",
+      body: new FormData(form),
+      headers: {
+        Accept: "application/json",
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        const errorMessages = Object.values(data.errors || {}).flat().join('\n');
+        alert("Error: " + (errorMessages || data.message || "Failed to update shares"));
       }
     })
     .catch(error => {
