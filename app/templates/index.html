@@ -89,7 +89,7 @@
       <div>{{ file.user.username }}</div>
       <div class="actions">
         <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
-        <a href="{{ url_for('main.visualize', file_id=file.id) }}" class="btn">Visualize</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}" class="btn">Analyze</a>
         <a href="{{ url_for('main.update_file', file_id=file.id) }}" class="btn">Update</a>
         <a href="{{ url_for('main.delete_file', file_id=file.id) }}" class="btn delete"
            onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');">Delete</a>
@@ -128,7 +128,7 @@
       <div>{{ file.user.username }}</div>
       <div class="actions">
         <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
-        <a href="{{ url_for('main.visualize', file_id=file.id) }}" class="btn">Visualize</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}" class="btn">Analyze</a>
       </div>
     </div>
     {% endfor %}
@@ -164,7 +164,7 @@
       <div>{{ file.user.username }}</div>
       <div class="actions">
         <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
-        <a href="{{ url_for('main.visualize', file_id=file.id) }}" class="btn">Visualize</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file_id) }}">Analysis</a>
       </div>
     </div>
     {% endfor %}
