@@ -36,33 +36,47 @@
     <label for="add-city-checkbox" class="text-base font-medium">Add another city</label>
   </div>
 
-  <!-- Visualise button -->
-  <div>
-    <button id="visualize-datasets"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-sm transition">
-      Visualise
-    </button>
+  <div class="mt-4">
+    <button id="load-dataset" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Load Dataset</button>
+  </div>
+  
+  <div id="year-dropdown-container" class="mt-4">
+    <label for="year-select" class="block text-lg font-medium mb-2">Select a Year:</label>
+    <select id="year-select" class="border border-gray-300 rounded-md p-2 w-full">
+      <option value="" disabled selected>Select a year</option>
+      <!-- Years will be dynamically populated by JavaScript -->
+    </select>
+  </div>
+  
+  <!-- Time span buttons -->
+  <div class="time-span-buttons mt-4">
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md active" data-timespan="year">Year</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="6months">6 Months</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="month">Month</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="week">Week</button>
+    <button class="time-span-button btn bg-[var(--primary-color)] text-white p-2 rounded-md" data-timespan="day">Day</button>
   </div>
 
-  <!-- Chart container -->
-  <div>
-    <canvas id="solarChart" width="800" height="400" class="mx-auto"></canvas>
-  </div>
+ 
 
-  <!-- Export buttons -->
-  <div class="flex flex-wrap gap-4 justify-start">
-    <button id="export-pdf"
-            class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg shadow-sm transition">
-      Export as PDF
-    </button>
-    <button id="export-image"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg shadow-sm transition">
-      Export as PNG/JPG
-    </button>
+  <!-- Button container for Visualise and Clear Chart -->
+  <div class="flex space-x-4 mt-4">
+    <button id="visualize-datasets" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Visualise</button>
+    <button id="clear-chart" class="bg-red-500 text-white px-4 py-2 rounded-md">Clear Chart</button>
+  </div>
+  <div class="mt-8">
+    <canvas id="solarChart" width="800" height="400"></canvas>
   </div>
 </div>
 
-<!-- Chart.js -->
+<!-- Add export buttons below the chart -->
+<div class="mt-4 flex space-x-4">
+  <button id="export-pdf" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Export as PDF</button>
+  <button id="export-image" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Export as PNG/JPG</button>
+</div>
+
+<!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.1/jspdf.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}

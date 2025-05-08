@@ -1,6 +1,7 @@
 import os
 import csv
-from datetime import datetime, UTC
+from datetime import datetime, timezone, timedelta
+now = datetime.now(timezone.utc)
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
     request, current_app, send_from_directory, jsonify, abort
@@ -76,6 +77,8 @@ def login():
             flash('Invalid username or password')
             return redirect(url_for('main.login'))
         login_user(user, remember=form.remember_me.data)
+        user.last_login_time = datetime.now(timezone.utc)
+        db.session.commit()
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.dashboard')
@@ -96,7 +99,10 @@ def dashboard():
         .limit(5)
         .all()
     )
-    return render_template('dashboard.html', recent_uploads=recent_uploads)
+    now = datetime.now(timezone.utc)
+    last_login = current_user.last_login_time + timedelta(hours=8)
+    formatted_last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+    return render_template('dashboard.html', recent_uploads=recent_uploads, now=now, last_login=formatted_last_login)
 
 # ================================
 # User Logout
@@ -129,7 +135,9 @@ def forgot_password():
 def reset_password(user_id):
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    user = User.query.get_or_404(user_id)
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404)
     form = ResetPasswordForm()
     if form.validate_on_submit():
         if not user.check_security_answer(form.security_answer.data):
@@ -184,7 +192,8 @@ def view_file(file_id):
     headers = list(uploads[0].data.keys()) if uploads else []
     rows = [list(u.data.values()) for u in uploads] if uploads else []
 
-    return render_template('view_file.html', file=f, headers=headers, rows=rows, owner=User.query.get(f.user_id), shared_users=f.share_with if f.visibility == 'shared' else [])
+    owner = db.session.get(User, f.user_id)
+    return render_template('view_file.html', file=f, headers=headers, rows=rows, owner=owner, shared_users=f.share_with if f.visibility == 'shared' else [])
 
 # ================================
 # Delete uploaded file (only by owner)
@@ -380,8 +389,11 @@ def visualisation():
     )
     current_app.logger.info(f"Public files: {public_files}")
 
-    uploaded_files = private_files + shared_files + public_files
-    return render_template('visualisation.html', uploaded_files=uploaded_files)
+    # Combine all files and remove duplicates based on file ID
+    all_files = private_files + shared_files + public_files
+    unique_files = {file.id: file for file in all_files}.values()  # Use a dictionary to ensure uniqueness by file ID
+
+    return render_template('visualisation.html', uploaded_files=unique_files)
 # ================================
 # Get file data for visualisation
 # ================================
