@@ -1,5 +1,7 @@
-{% extends 'base.html' %} {% block title %}Your Files{% endblock %} {% block
-content %}
+{% extends 'base.html' %} 
+{% block title %}Your Files{% endblock %} 
+{% block content %}
+
 <style>
   .file-container {
     margin-bottom: 30px;
@@ -61,6 +63,7 @@ content %}
 
 <h1>Your Files</h1>
 
+<!-- My Files -->
 <div class="file-container">
   <h2>My Files</h2>
   {% if own_files %}
@@ -77,30 +80,19 @@ content %}
     </div>
     {% for file in own_files %}
     <div class="file-item">
-      <div class="filename-cell" title="{{ file.filename }}">
-        {{ file.filename }}
-      </div>
+      <div class="filename-cell" title="{{ file.filename }}">{{ file.filename }}</div>
       <div>{{ file.city }}</div>
       <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
       <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
-      <div class="numeric">
-        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
-      </div>
+      <div class="numeric">{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</div>
       <div>{{ file.visibility|capitalize }}</div>
       <div>{{ file.user.username }}</div>
       <div class="actions">
-        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
-          >View</a
-        >
-        <a
-          href="{{ url_for('main.delete_file', file_id=file.id) }}"
-          class="btn delete"
-          onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');"
-          >Delete</a
-        >
-        <a href="{{ url_for('main.update_file', file_id=file.id) }}" class="btn"
-          >Update</a
-        >
+        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}" class="btn">Analyze</a>
+        <a href="{{ url_for('main.update_file', file_id=file.id) }}" class="btn">Update</a>
+        <a href="{{ url_for('main.delete_file', file_id=file.id) }}" class="btn delete"
+           onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');">Delete</a>
       </div>
     </div>
     {% endfor %}
@@ -110,6 +102,7 @@ content %}
   {% endif %}
 </div>
 
+<!-- Public Files -->
 <div class="file-container">
   <h2>Public Files</h2>
   {% if public_files %}
@@ -126,21 +119,16 @@ content %}
     </div>
     {% for file in public_files %}
     <div class="file-item">
-      <div class="filename-cell" title="{{ file.filename }}">
-        {{ file.filename }}
-      </div>
+      <div class="filename-cell" title="{{ file.filename }}">{{ file.filename }}</div>
       <div>{{ file.city }}</div>
       <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
       <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
-      <div class="numeric">
-        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
-      </div>
+      <div class="numeric">{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</div>
       <div>{{ file.visibility|capitalize }}</div>
       <div>{{ file.user.username }}</div>
       <div class="actions">
-        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
-          >View</a
-        >
+        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}" class="btn">Analyze</a>
       </div>
     </div>
     {% endfor %}
@@ -150,6 +138,7 @@ content %}
   {% endif %}
 </div>
 
+<!-- Shared Files -->
 <div class="file-container">
   <h2>Shared Files</h2>
   {% if shared_files %}
@@ -166,21 +155,16 @@ content %}
     </div>
     {% for file in shared_files %}
     <div class="file-item">
-      <div class="filename-cell" title="{{ file.filename }}">
-        {{ file.filename }}
-      </div>
+      <div class="filename-cell" title="{{ file.filename }}">{{ file.filename }}</div>
       <div>{{ file.city }}</div>
       <div class="numeric">{{ '%.2f'|format(file.latitude) }}</div>
       <div class="numeric">{{ '%.2f'|format(file.longitude) }}</div>
-      <div class="numeric">
-        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
-      </div>
+      <div class="numeric">{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</div>
       <div>{{ file.visibility|capitalize }}</div>
       <div>{{ file.user.username }}</div>
       <div class="actions">
-        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn"
-          >View</a
-        >
+        <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="btn">View</a>
+        <a href="{{ url_for('main.solar_analysis', file_id=file_id) }}">Analysis</a>
       </div>
     </div>
     {% endfor %}
@@ -189,4 +173,5 @@ content %}
   <div class="empty-message">No files shared with you.</div>
   {% endif %}
 </div>
+
 {% endblock %}
