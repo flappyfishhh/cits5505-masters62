@@ -25,6 +25,36 @@ from flask import render_template, request
 import json
 
 # ================================
+# # Solar Panel Suitability Classification Helper
+# ================================
+
+def suitability_grade(avg_exposure):
+    """
+    Classifies solar suitability based on average daily solar exposure.
+
+    Parameters:
+        avg_exposure (float): Average daily solar exposure in MJ/m².
+
+    Returns:
+        tuple: (grade, message)
+    """
+    if avg_exposure < 4.0:
+        return (
+            " Not Suitable",
+            f"Not Suitable. Only {avg_exposure:.2f} MJ/m²/day. Solar panel installation is not recommended without detailed feasibility and subsidy options."
+        )
+    elif avg_exposure < 5.0:
+        return (
+            " Moderately Suitable",
+            f"Moderately Suitable. {avg_exposure:.2f} MJ/m²/day. Solar panel installation is possible but ROI may be moderate. Consider hybrid systems or battery storage."
+        )
+    else:
+        return (
+            " Highly Suitable",
+            f"Highly Suitable{avg_exposure:.2f} MJ/m²/day. Excellent for solar panel installation with strong return on investment."
+        )
+    
+# ================================
 # Upload Blueprint
 # ================================
 main = Blueprint('main', __name__)
@@ -447,101 +477,52 @@ def get_file_data(file_id):
     return jsonify({"filename": file_record.filename, "data": data})
 
 # ================================
-# Solar Data Visualization
-# ================================
-@main.route('/visualize/<int:file_id>', methods=['GET', 'POST'])
-@login_required
-def visualize(file_id):
-    # Fetch the file metadata
-    file = FileUpload.query.get_or_404(file_id)
-
-    # Ensure user has access
-    if file.user_id != current_user.id and current_user not in file.share_with:
-        abort(403)
-
-    # Retrieve uploaded data rows
-    uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
-    if not uploads:
-        flash("No data available for visualization.", "warning")
-        return redirect(url_for("main.dashboard"))
-
-    # Convert to DataFrame
-    df = pd.DataFrame([row.data for row in uploads])
-
-    # Set up the form with dynamic choices
-    form = VisualizationForm()
-    form.x_axis.choices = [(col, col) for col in df.columns]
-    form.y_axis.choices = [(col, col) for col in df.columns]
-
-    chart_html = None
-    if form.validate_on_submit():
-        x_axis = form.x_axis.data
-        y_axis = form.y_axis.data
-
-        # Generate Plotly chart
-        fig = go.Figure(data=go.Scatter(
-            x=df[x_axis],
-            y=df[y_axis],
-            mode='lines+markers'
-        ))
-        fig.update_layout(title=f"{y_axis} vs {x_axis}",
-                          xaxis_title=x_axis,
-                          yaxis_title=y_axis)
-
-        chart_html = fig.to_html(full_html=False)
-
-    
-    return render_template("visualize.html", form=form, chart=chart_html, columns=df.columns, file_id=file_id)
-
-
-    # ================================
 # Solar Data Analysis (Trend + Anomalies)
 # ================================
-@main.route('/solar_analysis/<int:file_id>')
+@main.route('/solar_analysis/<int:file_id>', methods=['GET'])
 @login_required
 def solar_analysis(file_id):
     import pandas as pd
     import numpy as np
     import plotly.graph_objects as go
-
-    # Get uploaded file metadata
+    
     file = FileUpload.query.get_or_404(file_id)
 
-    # Check user access
     if file.user_id != current_user.id and current_user not in file.share_with:
         abort(403)
 
-    #  Get parsed rows from the Upload table
     uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
     if not uploads:
         flash('No data available for analysis.', 'warning')
         return redirect(url_for('main.dashboard'))
 
-    #  Convert rows to DataFrame
     df = pd.DataFrame([row.data for row in uploads])
-
-    # Sanitize and check columns
     df.columns = [col.strip() for col in df.columns]
+
     required_cols = {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}
     if not required_cols.issubset(df.columns):
         flash('Dataset must contain Year, Month, Day, and Daily global solar exposure (MJ/m*m)', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    # Create datetime and process data
     df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
     df['Daily global solar exposure (MJ/m*m)'] = pd.to_numeric(
         df['Daily global solar exposure (MJ/m*m)'], errors='coerce'
     )
     df.dropna(subset=['Date', 'Daily global solar exposure (MJ/m*m)'], inplace=True)
 
-    #Monthly trend
+    # Apply date filter if provided
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    if start_date:
+        df = df[df["Date"] >= pd.to_datetime(start_date)]
+    if end_date:
+        df = df[df["Date"] <= pd.to_datetime(end_date)]
+
     monthly_avg = df.groupby(df['Date'].dt.to_period('M'))['Daily global solar exposure (MJ/m*m)'].mean()
     monthly_avg.index = monthly_avg.index.to_timestamp()
 
-    # Seasonal patterns (average by calendar month)
     seasonal_patterns = df.groupby(df['Date'].dt.month_name())['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
 
-    # Anomaly detection using IQR
     Q1 = monthly_avg.quantile(0.25)
     Q3 = monthly_avg.quantile(0.75)
     IQR = Q3 - Q1
@@ -549,7 +530,9 @@ def solar_analysis(file_id):
     upper_bound = Q3 + 1.5 * IQR
     anomalies = monthly_avg[(monthly_avg < lower_bound) | (monthly_avg > upper_bound)].round(2).to_dict()
 
-    # Plot using Plotly
+    overall_avg = df['Daily global solar exposure (MJ/m*m)'].mean()
+    grade, suitability_message = suitability_grade(overall_avg)
+
     trend_fig = go.Figure()
     trend_fig.add_trace(go.Scatter(
         x=monthly_avg.index,
@@ -565,9 +548,10 @@ def solar_analysis(file_id):
     )
     trend_plot = trend_fig.to_html(full_html=False)
 
-    #  Render analysis.html
     return render_template('analysis.html',
                            seasonal_patterns=seasonal_patterns,
                            anomalies=anomalies,
-                           trend_plot=trend_plot)
-
+                           trend_plot=trend_plot,
+                           suitability_message=suitability_message,
+                           suitability_grade=grade,
+                           file_id=file_id)
