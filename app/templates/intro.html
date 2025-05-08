@@ -6,28 +6,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <style>
+    :root {
+      --bg-light: #0d0d2b;
+      --primary-color: #38bdf8;
+      --muted-color: #a1a1aa;
+      --accent-gradient: linear-gradient(to right, #3b82f6, #06b6d4);
+    }
+
+    .btn-gradient {
+      background-image: var(--accent-gradient);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+    }
+    @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+    .fade-in {
+      animation: fadeIn 1s ease-out forwards;
+    }
+  </style>
 </head>
-<body>
-  <div class="layout">
-    <main class="main flex items-center justify-center min-h-screen bg-[var(--bg-light)]">
-      <div class="container max-w-2xl text-center shadow-lg p-6">
-        <h1 class="text-4xl font-bold mb-4 text-[var(--primary-color)]">Welcome to SolarAnalytics</h1>
-        <p class="text-[var(--muted-color)] text-lg mb-6">
+<body class="relative overflow-x-hidden text-white bg-[var(--bg-light)]">
+  <!-- Particle Background -->
+  <div id="particles-js" class="absolute inset-0 -z-10"></div>
+
+    <main class="flex justify-center px-4 py-12 sm:py-16">
+      <div class="fade-in backdrop-blur-md bg-white/5 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl max-w-3xl w-full text-center border border-white/10 overflow-auto">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4 text-[var(--primary-color)] drop-shadow-lg">Welcome to SolarAnalytics</h1>
+        <p class="text-[var(--muted-color)] text-base sm:text-lg mb-6 leading-relaxed">
           SolarAnalytics is a powerful platform designed to help you upload, visualize, and share datasets related to daily global solar exposure (MJ/m²). 
           Gain valuable insights into solar energy patterns and trends, and easily track energy exposure data to optimize your solar performance and energy management.
         </p>
         
         <!-- Image Section -->
-        <div class="mb-8">
-          <img src="path_to_solar_image.jpg" alt="Solar Energy Visualization" class="mx-auto max-w-full h-auto rounded-lg shadow-md">
+        <div class="mb-8 sm:mb-8">
+          <img src="{{ url_for('static', filename='images/solar_photo.jpg') }}" alt="Solar Energy Visualization" class="mx-auto max-w-full h-auto rounded-lg shadow-md w-full max-h-[300px] object-cover">
         </div>
 
-        <div class="flex justify-center gap-6 mt-8">
-          <a href="{{ url_for('main.login') }}" class="btn px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition duration-200">Login</a>
-          <a href="{{ url_for('main.register') }}" class="btn px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 transition duration-200">Register</a>
+        <!-- Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+          <a href="{{ url_for('main.login') }}" class="btn-gradient px-6 py-3 rounded-xl shadow-lg text-center">Login</a>
+          <a href="{{ url_for('main.register') }}" class="btn-gradient px-6 py-3 rounded-xl shadow-lg text-center">Register</a>
         </div>
       </div>
     </main>
-  </div>
+    <script>
+      particlesJS.load('particles-js', '/static/js/particles.json', function () {
+        console.log('Particles.js loaded');
+      });
+    </script>
 </body>
 </html>
