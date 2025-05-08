@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Solar Data Analysis{% endblock %}
+
+{% block content %}
+<div class="container mt-6">
+    <h1 class="text-2xl font-bold mb-4">Solar Data Analysis</h1>
+
+    <!-- Seasonal Patterns -->
+    {% if seasonal_patterns %}
+        <h2 class="text-xl font-semibold mt-6">Seasonal Patterns (Monthly Averages)</h2>
+        <table class="table-auto w-full border-collapse border border-gray-300 text-sm mt-2">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2">Month</th>
+                    <th class="border border-gray-300 px-4 py-2">Average Solar Exposure (MJ/m²)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for month, value in seasonal_patterns.items() %}
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">{{ month }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if suitability_grade and suitability_message %}
+    {% set bg_color = "" %}
+    {% if "Highly Suitable" in suitability_grade %}
+        {% set bg_color = "bg-blue-100 border-blue-300 text-blue-900" %}
+    {% elif "Not Suitable" in suitability_grade %}
+        {% set bg_color = "bg-red-100 border-red-300 text-red-900" %}
+    {% elif "Moderately Suitable" in suitability_grade %}
+        {% set bg_color = "bg-green-100 border-green-300 text-green-900" %}
+    {% endif %}
+
+    <div class="p-4 mt-4 rounded border {{ bg_color }}">
+        <strong>{{ suitability_grade }}:</strong> {{ suitability_message }}
+    </div>
+{% endif %}
+    {% else %}
+        <p class="mt-2">No seasonal pattern data available.</p>
+    {% endif %}
+
+<!-- Recommended Threshold Table -->
+<div class="mt-10">
+    <h2 class="text-xl font-semibold mb-4">Recommended Solar Exposure Thresholds</h2>
+    <table class="table-auto w-full border-collapse border border-gray-300 text-sm">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border border-gray-300 px-4 py-2">Purpose</th>
+                <th class="border border-gray-300 px-4 py-2">Threshold (MJ/m²/day)</th>
+                <th class="border border-gray-300 px-4 py-2">Meaning</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">Suboptimal / Marginal</td>
+                <td class="border border-gray-300 px-4 py-2">&lt; 4.0</td>
+                <td class="border border-gray-300 px-4 py-2">May not justify cost unless subsidized or used with batteries.</td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">Minimum Viable (Residential)</td>
+                <td class="border border-gray-300 px-4 py-2">&ge; 4.0</td>
+                <td class="border border-gray-300 px-4 py-2">Suitable for basic rooftop solar (e.g., 3–6 kW systems).</td>
+            </tr>
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">Optimal Investment Zone</td>
+                <td class="border border-gray-300 px-4 py-2">&ge; 5.0</td>
+                <td class="border border-gray-300 px-4 py-2">Offers better return on investment.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+    <!-- Anomalies -->
+    {% if anomalies %}
+        <h2 class="text-xl font-semibold mt-6">Anomalies Detected (Unusual Monthly Averages)</h2>
+        <table class="table-auto w-full border-collapse border border-gray-300 text-sm mt-2">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2">Month-Year</th>
+                    <th class="border border-gray-300 px-4 py-2">Average Solar Exposure (MJ/m²)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for date, value in anomalies.items() %}
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">{{ date }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="mt-2">No anomalies detected.</p>
+    {% endif %}
+
+    <!-- Trend Plot -->
+    {% if trend_plot %}
+
+    <div class="plot-container mt-6">
+        <h2 class="text-xl font-semibold">Trend Over Time</h2>
+        <br>
+        <form method="get" class="flex flex-wrap gap-4 items-center mb-6">
+            <div>
+              <label class="block font-medium">Start Date</label>
+              <input type="month" name="start_date" value="{{ request.args.get('start_date', '') }}"
+                     class="border px-2 py-1 rounded">
+            </div>
+            <div>
+              <label class="block font-medium">End Date</label>
+              <input type="month" name="end_date" value="{{ request.args.get('end_date', '') }}"
+                     class="border px-2 py-1 rounded">
+            </div>
+            <div class="mt-6">
+              <button class="bg-blue-600 text-white px-4 py-2 rounded">Apply Filter</button>
+            </div>
+          </form>
+          
+        {{ trend_plot | safe }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
