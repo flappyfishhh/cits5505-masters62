@@ -18,6 +18,36 @@ from app.forms import (
     ForgotPasswordForm, ResetPasswordForm,
     UpdateEmailForm, ChangePasswordForm, UpdateFileForm
 )
+from datetime import datetime, timezone, timedelta
+now = datetime.now(timezone.utc)
+
+# ================================
+# # Solar Panel Suitability Classification Helper
+# ================================
+
+def suitability_grade(avg_exposure):
+    """
+    Classifies solar suitability based on average daily solar exposure.
+    Parameters:
+        avg_exposure (float): Average daily solar exposure in MJ/m².
+    Returns:
+        tuple: (grade, message)
+    """
+    if avg_exposure < 4.0:
+        return (
+            " Not Suitable",
+            f"Not Suitable. Only {avg_exposure:.2f} MJ/m²/day. Solar panel installation is not recommended without detailed feasibility and subsidy options."
+        )
+    elif avg_exposure < 5.0:
+        return (
+            " Moderately Suitable",
+            f"Moderately Suitable. {avg_exposure:.2f} MJ/m²/day. Solar panel installation is possible but ROI may be moderate. Consider hybrid systems or battery storage."
+        )
+    else:
+        return (
+            " Highly Suitable",
+            f"Highly Suitable{avg_exposure:.2f} MJ/m²/day. Excellent for solar panel installation with strong return on investment."
+        )
 
 # ================================
 # Upload Blueprint
@@ -446,3 +476,84 @@ def get_file_data(file_id):
     current_app.logger.info(f"Prepared data: {data}")
 
     return jsonify({"filename": file_record.filename, "data": data})
+
+	
+# ================================
+# Solar Data Analysis (Trend + Anomalies)
+# ================================
+@main.route('/solar_analysis/<int:file_id>', methods=['GET'])
+@login_required
+def solar_analysis(file_id):
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+
+    file = FileUpload.query.get_or_404(file_id)
+
+    if file.user_id != current_user.id and current_user not in file.share_with:
+        abort(403)
+
+    uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
+    if not uploads:
+        flash('No data available for analysis.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    df = pd.DataFrame([row.data for row in uploads])
+    df.columns = [col.strip() for col in df.columns]
+
+    required_cols = {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}
+    if not required_cols.issubset(df.columns):
+        flash('Dataset must contain Year, Month, Day, and Daily global solar exposure (MJ/m*m)', 'danger')
+        return redirect(url_for('main.dashboard'))
+
+    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Daily global solar exposure (MJ/m*m)'] = pd.to_numeric(
+        df['Daily global solar exposure (MJ/m*m)'], errors='coerce'
+    )
+    df.dropna(subset=['Date', 'Daily global solar exposure (MJ/m*m)'], inplace=True)
+
+    # Apply date filter if provided
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    if start_date:
+        df = df[df["Date"] >= pd.to_datetime(start_date)]
+    if end_date:
+        df = df[df["Date"] <= pd.to_datetime(end_date)]
+
+    monthly_avg = df.groupby(df['Date'].dt.to_period('M'))['Daily global solar exposure (MJ/m*m)'].mean()
+    monthly_avg.index = monthly_avg.index.to_timestamp()
+
+    seasonal_patterns = df.groupby(df['Date'].dt.month_name())['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
+
+    Q1 = monthly_avg.quantile(0.25)
+    Q3 = monthly_avg.quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    anomalies = monthly_avg[(monthly_avg < lower_bound) | (monthly_avg > upper_bound)].round(2).to_dict()
+
+    overall_avg = df['Daily global solar exposure (MJ/m*m)'].mean()
+    grade, suitability_message = suitability_grade(overall_avg)
+
+    trend_fig = go.Figure()
+    trend_fig.add_trace(go.Scatter(
+        x=monthly_avg.index,
+        y=monthly_avg.values,
+        mode='lines+markers',
+        name='Monthly Avg Solar Exposure'
+    ))
+    trend_fig.update_layout(
+        title='Monthly Average Solar Exposure Over Time',
+        xaxis_title='Date',
+        yaxis_title='Daily Global Solar Exposure (MJ/m²)',
+        height=500
+    )
+    trend_plot = trend_fig.to_html(full_html=False)
+
+    return render_template('analysis.html',
+                           seasonal_patterns=seasonal_patterns,
+                           anomalies=anomalies,
+                           trend_plot=trend_plot,
+                           suitability_message=suitability_message,
+                           suitability_grade=grade,
+                           file_id=file_id)
