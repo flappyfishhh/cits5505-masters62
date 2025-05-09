@@ -14,16 +14,48 @@
     #} {% set show_sidebar = current_user.is_authenticated and request.endpoint
     not in ['main.login', 'main.register'] %} {% if show_sidebar %}
     <div class="layout">
-      <aside class="sidebar">
-        <ul>
-          <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li> <!-- Added Dashboard Link -->
-          <li><a href="{{ url_for('main.profile') }}">User Profile</a></li>
-          <li><a href="{{ url_for('main.upload') }}">Data Upload</a></li>
-          <li><a href="{{ url_for('main.index') }}">Uploaded Files</a></li>
-          <li><a href="{{ url_for('main.visualisation') }}">Visualisation</a></li> 
-          <li><a href="{{ url_for('main.logout') }}">Logout</a></li>
+      <aside class="w-64 min-h-screen bg-[rgba(0,0,0,0.7)] backdrop-blur-md border-r border-white/10 p-6 text-white">
+        <h2 class="text-2xl font-bold mb-8 text-center text-[var(--primary-color)]">SolarScope</h2>
+        <ul class="space-y-3">
+          <li>
+            <a href="{{ url_for('main.dashboard') }}"
+               class="block px-4 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition duration-200">
+              🧭 Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.profile') }}"
+               class="block px-4 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition duration-200">
+              👤 User Profile
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.upload') }}"
+               class="block px-4 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition duration-200">
+              ☁️ Upload Data
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.index') }}"
+               class="block px-4 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition duration-200">
+              📁 Uploaded Files
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.visualisation') }}"
+               class="block px-4 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition duration-200">
+              📊 Visualisation
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.logout') }}"
+               class="block px-4 py-2 rounded-lg text-red-300 hover:bg-red-500/10 hover:text-red-100 transition duration-200">
+              🚪 Logout
+            </a>
+          </li>
         </ul>
-      </aside>
+      </aside>      
+      
       <div class="main">
         {% else %}
         <div class="container">

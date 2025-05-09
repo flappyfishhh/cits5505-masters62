@@ -54,32 +54,44 @@ $(function () {
     if (addCityCheckbox.checked && dropdownCount < 4) {
       dropdownCount++;
 
-        // Get the options from the first dropdown
-        const firstDropdown = document.getElementById('dataset-select-1');
-        if (!firstDropdown) return;
+      // Get the options from the first dropdown
+      const firstDropdown = document.getElementById('dataset-select-1');
+      const optionsHTML = firstDropdown.innerHTML;
 
-        const optionsHTML = firstDropdown.innerHTML;
+      // Create a new dropdown with a delete button
+      const newDropdown = document.createElement('div');
+      newDropdown.classList.add('dropdown-item', 'mt-4', 'flex', 'items-center');
+      newDropdown.setAttribute('id', `dropdown-item-${dropdownCount}`);
+      newDropdown.innerHTML = `
+        <div class="flex-grow">
+          <label for="dataset-select-${dropdownCount}" class="block text-lg font-medium mb-2">Choose another dataset:</label>
+          <select id="dataset-select-${dropdownCount}" class="border border-gray-300 rounded-md p-2 w-full">
+            ${optionsHTML}
+          </select>
+        </div>
+        <button class="ml-4 bg-red-500 text-white px-4 py-2 rounded-md delete-city-button" data-dropdown-id="${dropdownCount}">Delete</button>
+      `;
+      dropdownContainer.appendChild(newDropdown);
 
-        // Create a new dropdown with a delete button
-        const newDropdown = document.createElement('div');
-        newDropdown.classList.add('dropdown-item', 'mt-4', 'flex', 'items-center');
-        newDropdown.setAttribute('id', `dropdown-item-${dropdownCount}`);
-        newDropdown.innerHTML = `
-          <div class="flex-grow">
-            <label for="dataset-select-${dropdownCount}" class="block text-lg font-medium mb-2">Choose another dataset:</label>
-            <select id="dataset-select-${dropdownCount}" class="border border-gray-300 rounded-md p-2 w-full">
-              ${optionsHTML}
-            </select>
-          </div>
-          <button class="ml-4 bg-red-500 text-white px-4 py-2 rounded-md delete-city-button" data-dropdown-id="${dropdownCount}">Delete</button>
-        `;
-        dropdownContainer.appendChild(newDropdown);
+      // Reset the checkbox to unchecked after adding a dropdown
+      addCityCheckbox.checked = false;
 
-        // Reset the checkbox
-        addCityCheckbox.checked = false;
+      // Disable the checkbox if the maximum number of dropdowns is reached
+      if (dropdownCount === 4) {
+        addCityCheckbox.disabled = true;
+      }
 
-        if (dropdownCount === 4) {
-          addCityCheckbox.disabled = true;
+      // Add event listener for the delete button
+      const deleteButton = newDropdown.querySelector('.delete-city-button');
+      deleteButton.addEventListener('click', function () {
+        const dropdownId = this.getAttribute('data-dropdown-id');
+        const dropdownItem = document.getElementById(`dropdown-item-${dropdownId}`);
+        dropdownItem.remove();
+
+        // Decrease the dropdown count and re-enable the checkbox if necessary
+        dropdownCount--;
+        if (dropdownCount < 4) {
+          addCityCheckbox.disabled = false;
         }
 
         // Update dropdown options after deletion
@@ -170,20 +182,22 @@ yearDropdown.addEventListener('change', function () {
     const selectedFileIds = [];
     const cityNames = []; // Store city names for the legend
 
-          dropdownCount--;
-          if (dropdownCount < 4) {
-            addCityCheckbox.disabled = false;
-          }
-        });
+    // Loop through all dropdowns and collect valid selections
+    const dropdowns = dropdownContainer.querySelectorAll('select');
+    dropdowns.forEach((dropdown) => {
+      if (dropdown && dropdown.value) {
+        selectedFileIds.push(dropdown.value);
+        cityNames.push(dropdown.options[dropdown.selectedIndex].text); // Get the city name
       }
     });
-  }
 
-  // Add event listener for the visualize button
-  if (visualizeButton && dropdownContainer) {
-    visualizeButton.addEventListener('click', function () {
-      const selectedFileIds = [];
-      const cityNames = []; // Store city names for the legend
+    if (selectedFileIds.length > 0) {
+      const fetchPromises = selectedFileIds.map(fileId =>
+        fetch(`/get-file-data/${fileId}`).then(response => {
+          if (!response.ok) throw new Error(`Failed to fetch file data for ${fileId}`);
+          return response.json();
+        })
+      );
 
       Promise.all(fetchPromises)
         .then(dataArray => {
@@ -356,15 +370,13 @@ yearDropdown.addEventListener('change', function () {
   });
 
   // Export chart as PNG/JPG
-  if (exportImageButton) {
-    exportImageButton.addEventListener('click', function () {
-      const canvas = document.getElementById('solarChart');
-      canvas.toBlob(function (blob) {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'solar_analysis.png'; // Default filename
-        link.click();
-      }, 'image/png');
-    });
-  }
+  exportImageButton.addEventListener('click', function () {
+    const canvas = document.getElementById('solarChart');
+    canvas.toBlob(function (blob) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'solar_analysis.png'; // Default filename
+      link.click();
+    }, 'image/png');
+  });
 });

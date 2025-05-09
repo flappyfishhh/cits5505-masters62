@@ -56,12 +56,12 @@
   
   .main {
     flex: 1;
-    padding: 2rem;
+    padding: 0rem;
   }
   
   .container {
     background-color: var(--bg-white);
-    padding: 2rem;
+    padding: 0rem;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }

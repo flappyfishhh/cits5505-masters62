@@ -26,16 +26,15 @@
           <div class="flex flex-col sm:flex-row gap-4">
             {{ form.share_with(
               class="flex-1 px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]",
-              placeholder="Comma-separated emails (e.g. user1@example.com)"
+              placeholder="Comma-separated emails (e.g. user1@example.com,user2@example.com)"
             ) }}
             <button type="button" class="btn-gradient px-5 py-2 rounded shadow" onclick="updateShares()">
-              Update Sharing
+              Update
             </button>
           </div>
           {% for error in form.share_with.errors %}
             <div class="text-red-500 text-sm mt-1">{{ error }}</div>
           {% endfor %}
-          <small class="text-[var(--muted-color)]">Note: You cannot share with yourself</small>
         </div>
       </div>
 
@@ -63,7 +62,7 @@
 
       <!-- Submit Buttons -->
       <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4">
-        <button type="submit" class="btn-gradient px-6 py-2 rounded-xl shadow-md">Save Permissions</button>
+        <button type="submit" class="btn-gradient px-6 py-2 rounded-xl shadow-md">Save</button>
         <a href="{{ url_for('main.index') }}" class="btn-secondary px-6 py-2 rounded-xl">Cancel</a>
       </div>
     </form>
