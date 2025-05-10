@@ -57,7 +57,16 @@
             </svg>
             Update
           </a>
-        
+            <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}"
+          class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
+              bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4v16m8-8H4" />
+          </svg>
+           Analyze
+          </a>
+
           <a href="{{ url_for('main.delete_file', file_id=file.id) }}"
              onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');"
              class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
