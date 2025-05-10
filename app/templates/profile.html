@@ -3,71 +3,73 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-  <h1 class="text-3xl font-semibold text-center text-[var(--primary-color)] mb-6">User Profile</h1>
+<main class="flex justify-center px-4 py-12 sm:py-16 lg:py-20">
+  <div class="custom-card max-w-3xl w-full">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-[var(--primary-color)] mb-10">User Profile</h1>
 
-  <div class="space-y-12">
-    <!-- Update Email Section -->
-    <section>
-      <h2 class="text-2xl font-medium text-[var(--secondary-color)] mb-4">Update Email</h2>
-      <form method="post" action="{{ url_for('main.profile') }}">
-        {{ email_form.hidden_tag() }}
-        <div class="form-group mb-4">
-          <label for="email" class="block text-lg font-medium text-gray-700">{{ email_form.email.label }}</label>
-          {{ email_form.email(class="form-control p-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]") }}
-          {% for err in email_form.email.errors %}
-            <div class="text-red-500 text-sm mt-1">{{ err }}</div>
-          {% endfor %}
-        </div>
-        <div class="form-group">
-          {{ email_form.submit_email(class="btn bg-[var(--primary-color)] text-white p-2 rounded-md") }}
-        </div>
-      </form>
-    </section>
+    <div class="space-y-12">
+      <!-- Update Email Section -->
+      <section>
+        <h2 class="text-2xl font-semibold text-[var(--secondary-color)] mb-4">Update Email</h2>
+        <form method="post" action="{{ url_for('main.profile') }}">
+          {{ email_form.hidden_tag() }}
+          <div class="mb-4">
+            {{ email_form.email.label(class="block mb-1 text-base font-medium") }}
+            {{ email_form.email(class="w-full px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]", placeholder="New email address") }}
+            {% for err in email_form.email.errors %}
+              <div class="text-red-500 text-sm mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
+          <div>
+            {{ email_form.submit_email(class="w-full py-2 rounded-md text-center font-semibold border border-[var(--primary-color)] text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition duration-300") }}
+          </div>
+        </form>
+      </section>
 
-    <!-- Change Password Section -->
-    <section>
-      <h2 class="text-2xl font-medium text-[var(--secondary-color)] mb-4">Change Password</h2>
-      <form method="post" action="{{ url_for('main.profile') }}">
-        {{ pw_form.hidden_tag() }}
-        
-        <div class="form-group mb-4">
-          <label for="current_password" class="block text-lg font-medium text-gray-700">{{ pw_form.current_password.label }}</label>
-          {{ pw_form.current_password(class="form-control p-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]") }}
-          {% for err in pw_form.current_password.errors %}
-            <div class="text-red-500 text-sm mt-1">{{ err }}</div>
-          {% endfor %}
-        </div>
+      <!-- Change Password Section -->
+      <section>
+        <h2 class="text-2xl font-semibold text-[var(--secondary-color)] mb-4">Change Password</h2>
+        <form method="post" action="{{ url_for('main.profile') }}">
+          {{ pw_form.hidden_tag() }}
 
-        <div class="form-group mb-4">
-          <label for="security_answer" class="block text-lg font-medium text-gray-700">{{ pw_form.security_answer.label }}</label>
-          {{ pw_form.security_answer(class="form-control p-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]") }}
-          {% for err in pw_form.security_answer.errors %}
-            <div class="text-red-500 text-sm mt-1">{{ err }}</div>
-          {% endfor %}
-        </div>
+          <div class="mb-4">
+            {{ pw_form.current_password.label(class="block mb-1 text-base font-medium") }}
+            {{ pw_form.current_password(class="w-full px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]", placeholder="Current password") }}
+            {% for err in pw_form.current_password.errors %}
+              <div class="text-red-500 text-sm mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
 
-        <div class="form-group mb-4">
-          <label for="new_password" class="block text-lg font-medium text-gray-700">{{ pw_form.new_password.label }}</label>
-          {{ pw_form.new_password(class="form-control p-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]") }}
-          {% for err in pw_form.new_password.errors %}
-            <div class="text-red-500 text-sm mt-1">{{ err }}</div>
-          {% endfor %}
-        </div>
+          <div class="mb-4">
+            {{ pw_form.security_answer.label(class="block mb-1 text-base font-medium") }}
+            {{ pw_form.security_answer(class="w-full px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]", placeholder="Security answer") }}
+            {% for err in pw_form.security_answer.errors %}
+              <div class="text-red-500 text-sm mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
 
-        <div class="form-group mb-4">
-          <label for="new_password2" class="block text-lg font-medium text-gray-700">{{ pw_form.new_password2.label }}</label>
-          {{ pw_form.new_password2(class="form-control p-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]") }}
-          {% for err in pw_form.new_password2.errors %}
-            <div class="text-red-500 text-sm mt-1">{{ err }}</div>
-          {% endfor %}
-        </div>
+          <div class="mb-4">
+            {{ pw_form.new_password.label(class="block mb-1 text-base font-medium") }}
+            {{ pw_form.new_password(class="w-full px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]", placeholder="New password") }}
+            {% for err in pw_form.new_password.errors %}
+              <div class="text-red-500 text-sm mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
 
-        <div class="form-group">
-          {{ pw_form.submit_password(class="btn bg-[var(--primary-color)] text-white p-2 rounded-md") }}
-        </div>
-      </form>
-    </section>
+          <div class="mb-4">
+            {{ pw_form.new_password2.label(class="block mb-1 text-base font-medium") }}
+            {{ pw_form.new_password2(class="w-full px-4 py-2 rounded bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]", placeholder="Confirm new password") }}
+            {% for err in pw_form.new_password2.errors %}
+              <div class="text-red-500 text-sm mt-1">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <div>
+            {{ pw_form.submit_password(class="w-full py-2 rounded-md text-center font-semibold border border-[var(--primary-color)] text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition duration-300") }}
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
-</div>
+</main>
 {% endblock %}

@@ -99,7 +99,7 @@ def dashboard():
         .limit(5)
         .all()
     )
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone(timedelta(hours=8)))
     last_login = current_user.last_login_time + timedelta(hours=8)
     formatted_last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
     return render_template('dashboard.html', recent_uploads=recent_uploads, now=now, last_login=formatted_last_login)
@@ -300,7 +300,7 @@ def update_file(file_id):
         if request.headers.get('Accept') == 'application/json':
             return jsonify({'success': False, 'message': 'Validation failed', 'errors': form.errors}), 400
 
-    form.share_with.data = ', '.join(current_shared_emails) if file.visibility != 'public' else ''
+    form.share_with.data = '' if file.visibility != 'public' else ''
     if request.headers.get('Accept') == 'application/json':
         return jsonify({'shared_emails': current_shared_emails, 'visibility': file.visibility})
 
