@@ -1,50 +1,59 @@
-{% extends 'base.html' %} {% block title %}Register{% endblock %} {% block
-content %}
-<h1>Create an Account</h1>
-<form method="post" action="{{ url_for('main.register') }}">
-  {{ form.hidden_tag() }}
+{% extends 'base.html' %} 
+{% block title %}Register{% endblock %} 
+{% block content %}
+<main class="flex justify-center px-4 py-12 sm:py-16 lg:py-20">
+  <div class="backdrop-blur-md bg-white/5 p-6 sm:p-8 rounded-2xl shadow-2xl max-w-2xl w-full border border-white/10 text-white">
+    <h1 class="text-3xl sm:text-4xl font-extrabold mb-6 text-[var(--primary-color)] text-center">Create an Account</h1>
+    <form method="post" action="{{ url_for('main.register') }}" class="space-y-4">
+      {{ form.hidden_tag() }}
 
-  <div class="form-group">
-    {{ form.username.label }} {{ form.username(class="form-control",
-    placeholder="Username") }} {% for err in form.username.errors %}
-    <div class="errors">{{ err }}</div>
-    {% endfor %}
+      <div>
+        {{ form.username.label(class="block mb-1") }} 
+        {{ form.username(class="w-full px-4 py-2 rounded bg-white/10 border border-white/20 focus:outline-none",placeholder="Username") }} 
+        {% for err in form.username.errors %}
+          <div class="text-red-400 text-sm">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div>
+        {{ form.email.label(class="block mb-1") }} 
+        {{ form.email(class="w-full px-4 py-2 rounded bg-white/10 border border-white/20 focus:outline-none",placeholder="Email") }} 
+        {% for err in form.email.errors %}
+          <div class="text-red-400 text-sm">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div>
+        {{ form.password.label(class="block mb-1") }} 
+        {{ form.password(class="w-full px-4 py-2 rounded bg-white/10 border border-white/20 focus:outline-none",placeholder="Password") }} 
+        {% for err in form.password.errors %}
+          <div class="text-red-400 text-sm">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div>
+        {{ form.password2.label(class="block mb-1") }} 
+        {{ form.password2(class="w-full px-4 py-2 rounded bg-white/10 border border-white/20 focus:outline-none",placeholder="Repeat Password") }} 
+        {% for err in form.password2.errors %}
+          <div class="text-red-400 text-sm">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div>
+        {{ form.security_answer.label(class="block mb-1") }} {{
+        form.security_answer(class="w-full px-4 py-2 rounded bg-white/10 border border-white/20 focus:outline-none", placeholder="What was the name of your first pet?") }} 
+        {% for err in form.security_answer.errors %}
+          <div class="text-red-400 text-sm">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div>{{ form.submit(class="custom-btn px-6 py-2 rounded-xl shadow-md") }}</div>
+    </form>
+
+    <p class="mt-4 text-sm text-[var(--muted-color)] text-center">
+      Already have an account?
+      <a href="{{ url_for('main.login') }}" class="underline hover:text-white">Sign in here</a>.
+    </p>
   </div>
-
-  <div class="form-group">
-    {{ form.email.label }} {{ form.email(class="form-control",
-    placeholder="Email") }} {% for err in form.email.errors %}
-    <div class="errors">{{ err }}</div>
-    {% endfor %}
-  </div>
-
-  <div class="form-group">
-    {{ form.password.label }} {{ form.password(class="form-control",
-    placeholder="Password") }} {% for err in form.password.errors %}
-    <div class="errors">{{ err }}</div>
-    {% endfor %}
-  </div>
-
-  <div class="form-group">
-    {{ form.password2.label }} {{ form.password2(class="form-control",
-    placeholder="Repeat Password") }} {% for err in form.password2.errors %}
-    <div class="errors">{{ err }}</div>
-    {% endfor %}
-  </div>
-
-  <div class="form-group">
-    {{ form.security_answer.label }} {{
-    form.security_answer(class="form-control", placeholder="What was the name of
-    your first pet?") }} {% for err in form.security_answer.errors %}
-    <div class="errors">{{ err }}</div>
-    {% endfor %}
-  </div>
-
-  <div class="form-group">{{ form.submit(class="btn") }}</div>
-</form>
-
-<p class="mt-2 muted-color">
-  Already have an account?
-  <a href="{{ url_for('main.login') }}">Sign in here</a>.
-</p>
+</main> 
 {% endblock %}
