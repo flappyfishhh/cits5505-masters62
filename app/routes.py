@@ -266,7 +266,7 @@ def upload():
         ensure_upload_folder()
         f = form.csv_file.data
         orig = secure_filename(f.filename)
-        ts = datetime.now(UTC).strftime('%Y%m%d%H%M%S')  
+        ts = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')  
         saved = f"{current_user.id}_{ts}_{orig}"
         saved = f"{current_user.id}_{orig}" 
         path = os.path.join(UPLOAD_FOLDER, saved)
