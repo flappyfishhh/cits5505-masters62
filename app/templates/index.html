@@ -31,7 +31,7 @@
         <div>{{ file.city }}</div>
         <div class="text-center">{{ '%.2f'|format(file.latitude) }}</div>
         <div class="text-center">{{ '%.2f'|format(file.longitude) }}</div>
-        <div class="text-center">{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div class="text-center">{{ file.uploaded_at|localtime }}</div>
         <div>{{ file.visibility|capitalize }}</div>
         <div>{{ file.user.username }}</div>
         <div class="flex flex-wrap gap-2 justify-start items-center">
