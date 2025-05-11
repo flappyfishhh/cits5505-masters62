@@ -10,6 +10,7 @@ $(function () {
   const exportPdfButton = document.getElementById('export-pdf');
   const exportImageButton = document.getElementById('export-image');
   const timeSpanButtons = document.querySelectorAll('.time-span-button'); // Buttons for time spans
+  const timeSpanDropdown = document.getElementById('time-span-select');
   const yearDropdown = document.getElementById('year-select'); // Year dropdown
   const loadDatasetButton = document.getElementById('load-dataset'); // Load Dataset button
   const clearChartButton = document.getElementById('clear-chart');
@@ -39,7 +40,6 @@ $(function () {
     });
   }
 
-  // Add event listener for time span buttons
   // Add event listener for time span buttons
   timeSpanButtons.forEach(button => {
     button.addEventListener('click', function () {
@@ -135,11 +135,40 @@ function populateYearDropdown(dataArray) {
     yearDropdown.appendChild(option);
   });
 }
+// Update the time span dropdown based on the selected year
+function updateTimeSpanOptions() {
+  timeSpanDropdown.innerHTML = ''; // Clear existing options
+
+  if (selectedYear === null) {
+    // If "All Years" is selected, show only "Year" and "6 Months"
+    timeSpanDropdown.innerHTML += `<option value="year">Year</option>`;
+    timeSpanDropdown.innerHTML += `<option value="6months">6 Months</option>`;
+  } else {
+    // If a specific year is selected, show "Month", "Week", and "Day"
+    timeSpanDropdown.innerHTML += `<option value="month">Month</option>`;
+    timeSpanDropdown.innerHTML += `<option value="week">Week</option>`;
+    timeSpanDropdown.innerHTML += `<option value="day">Day</option>`;
+  }
+
+  // Set the default selected time span
+  selectedTimeSpan = timeSpanDropdown.value || 'year';
+}
 
 // Add event listener for year selection
 yearDropdown.addEventListener('change', function () {
-  selectedYear = this.value === "all" ? null : parseInt(this.value, 10); // If "Select All" is chosen, set selectedYear to null
+  selectedYear = yearDropdown.value === 'all' ? null : parseInt(yearDropdown.value, 10); // Handle "All Years"
+  updateTimeSpanOptions(); // Update time span options based on the selected year
 });
+
+// Add event listener for time span selection
+timeSpanDropdown.addEventListener('change', function () {
+  selectedTimeSpan = timeSpanDropdown.value || 'year'; // Update the selected time span
+});
+// Update the selected year when the year dropdown changes
+  yearDropdown.addEventListener('change', function () {
+    selectedYear = yearDropdown.value === 'all' ? null : parseInt(yearDropdown.value, 10); // Handle "All Years"
+    updateTimeSpanOptions(); // Update time span options based on the selected year
+  });
 
 
   // Add event listener for the "Load Dataset" button
@@ -182,12 +211,14 @@ yearDropdown.addEventListener('change', function () {
   });
 
     // Function to calculate the total solar exposure for the selected dataset and year
-  function calculateTotalSolarExposure(data, selectedYear) {
-    // Filter the data for the selected year
-    const filteredData = data.filter(row => {
-      const year = new Date(row.date).getFullYear(); // Extract the year from the date
-      return selectedYear ? year === selectedYear : true; // Match the selected year
-    });
+    function calculateTotalSolarExposure(data, selectedYear) {
+      const filteredData = data.filter(row => {
+        const year = new Date(row.date).getFullYear();
+        return selectedYear ? year === selectedYear : true; // Match the selected year or include all years
+      });
+    
+      return filteredData.reduce((sum, row) => sum + row.solar_exposure, 0);
+    
 
     // Calculate the total solar exposure
     const total = filteredData.reduce((sum, row) => sum + row.solar_exposure, 0);
@@ -257,55 +288,54 @@ visualizeButton.addEventListener('click', function () {
   }
 });
 
-  function processFileData(fileData, timeSpan) {
-    const groupedData = {};
-  
-    fileData.forEach(row => {
-      if (row.solar_exposure !== null) {
-        const date = new Date(row.date);
-        let key;
-  
-        // Group data based on the selected time span
-        switch (timeSpan) {
-          case 'year':
-            key = date.getFullYear();
-            break;
-          case '6months':
-            key = `${date.getFullYear()}-${Math.ceil((date.getMonth() + 1) / 6)}`; // 1 or 2 for first/second half
-            break;
-          case 'month':
-            key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`; // Year-Month (e.g., "2025-01")
-            break;
-          case 'week':
-            const weekStart = new Date(date);
-            weekStart.setDate(date.getDate() - date.getDay()); // Start of the week (Sunday)
-            key = weekStart.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-            break;
-          case 'day':
-            key = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-            break;
-          default:
-            key = date.getFullYear();
-        }
-  
-        if (!groupedData[key]) {
-          groupedData[key] = { total: 0, count: 0 };
-        }
-        groupedData[key].total += row.solar_exposure;
-        groupedData[key].count += 1;
+  // Process file data based on the selected time span and year
+function processFileData(fileData, timeSpan) {
+  const groupedData = {};
+
+  fileData.forEach(row => {
+    if (row.solar_exposure !== null) {
+      const date = new Date(row.date);
+      const year = date.getFullYear();
+
+      // Skip rows that don't match the selected year (if a specific year is selected)
+      if (selectedYear && year !== selectedYear) return;
+
+      let key;
+      switch (timeSpan) {
+        case 'year':
+          key = year;
+          break;
+        case '6months':
+          key = `${year}-${Math.ceil((date.getMonth() + 1) / 6)}`;
+          break;
+        case 'month':
+          key = `${year}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+          break;
+        case 'week':
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          key = weekStart.toISOString().split('T')[0];
+          break;
+        case 'day':
+          key = date.toISOString().split('T')[0];
+          break;
+        default:
+          key = year;
       }
-    });
-  
-    const labels = Object.keys(groupedData).sort((a, b) => {
-      if (timeSpan === 'month') {
-        return new Date(a).getTime() - new Date(b).getTime(); // Sort by date for months
-      }
-      return a.localeCompare(b, undefined, { numeric: true }); // Numeric sort for other cases
-    });
-  
-    const values = labels.map(key => parseFloat((groupedData[key].total / groupedData[key].count).toFixed(2)));
-    return { labels, values };
-  }
+
+      if (!groupedData[key]) groupedData[key] = { total: 0, count: 0 };
+      groupedData[key].total += row.solar_exposure;
+      groupedData[key].count += 1;
+    }
+  });
+
+  const labels = Object.keys(groupedData).sort((a, b) => {
+    if (timeSpan === 'month') return new Date(a) - new Date(b);
+    return a.localeCompare(b, undefined, { numeric: true });
+  });
+  const values = labels.map(key => (groupedData[key].total / groupedData[key].count).toFixed(2));
+  return { labels, values };
+}
 
   function renderChart(chartDataArray, cityNames) {
     const canvas = document.getElementById('solarChart');
