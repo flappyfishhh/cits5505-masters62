@@ -21,7 +21,6 @@ from app.forms import (
 from datetime import datetime, timezone, timedelta
 now = datetime.now(timezone.utc)
 
-
 # ================================
 # # Solar Panel Suitability Classification Helper
 # ================================
@@ -34,21 +33,27 @@ def suitability_grade(avg_exposure):
     Returns:
         tuple: (grade, message)
     """
-    if avg_exposure < 4.0:
+    if avg_exposure < 3.99:
         return (
-            " Not Suitable",
-            f"Not Suitable. Only {avg_exposure:.2f} MJ/m²/day. Solar panel installation is not recommended without detailed feasibility and subsidy options."
+            "Not Suitable",
+            f"Average Solar Exposure value is less than 3.99 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
         )
-    elif avg_exposure < 5.0:
+    elif avg_exposure <= 4.0:
         return (
-            " Moderately Suitable",
-            f"Moderately Suitable. {avg_exposure:.2f} MJ/m²/day. Solar panel installation is possible but ROI may be moderate. Consider hybrid systems or battery storage."
+            "Off-grid",
+            f"Average Solar Exposure value is between 4 and 5 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
+        )
+    elif avg_exposure < 20.0:
+        return (
+            "Grid-tied Residential",
+            f"Average Solar Exposure value is between 4.01 and less than 20.0 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
         )
     else:
         return (
-            " Highly Suitable",
-            f"Highly Suitable{avg_exposure:.2f} MJ/m²/day. Excellent for solar panel installation with strong return on investment."
+            "High Performance Zone",
+            f"Average Solar Exposure value is greater than or equal to 20.0 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
         )
+
 
 # ================================
 # Upload Blueprint
