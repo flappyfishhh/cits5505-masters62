@@ -244,20 +244,27 @@ function displaySuggestions(dataArray, cityNames) {
     const yearlyAverage = calculateYearlyAverage(dataArray[0].data);
 
     let recommendation = '';
+    let explanation = ''; // Explanation for the recommendation
+
     if (yearlyAverage < 4000) {
       recommendation = 'Usually not recommended (unless heavily subsidized)';
+      explanation = 'The solar exposure in this region is below 4,000 MJ/m²/year, making it uneconomical for household solar panels unless there are subsidies or other motivations.';
     } else if (yearlyAverage >= 4000 && yearlyAverage < 6000) {
       recommendation = 'Moderate (check financial payback time)';
+      explanation = 'The solar exposure in this region is between 4,000 and 6,000 MJ/m²/year. It is a moderate candidate for solar panels, but you should check the financial payback time to ensure it is cost-effective.';
     } else if (yearlyAverage >= 6000 && yearlyAverage < 8000) {
       recommendation = 'Good candidate for solar installation';
+      explanation = 'The solar exposure in this region is between 6,000 and 8,000 MJ/m²/year, making it a good candidate for solar panel installation. The financial returns are likely to be favorable.';
     } else {
       recommendation = 'Excellent location for solar';
+      explanation = 'The solar exposure in this region exceeds 8,000 MJ/m²/year, making it an excellent location for solar panel installation. High solar exposure ensures maximum energy generation and financial returns.';
     }
 
     descriptionContainer.innerHTML = `
       <h3>Solar Panel Recommendation for ${cityNames[0]}</h3>
       <p><strong>Yearly Average Solar Exposure:</strong> ${yearlyAverage.toFixed(2)} MJ/m²</p>
       <p><strong>Recommendation:</strong> ${recommendation}</p>
+      <p>${explanation}</p>
     `;
   } else {
     // Multiple datasets: Compare cities and suggest the best one
@@ -273,7 +280,7 @@ function displaySuggestions(dataArray, cityNames) {
       <h3>Best City for Solar Panel Installation</h3>
       <p><strong>City:</strong> ${bestCity.city}</p>
       <p><strong>Yearly Average Solar Exposure:</strong> ${bestCity.average.toFixed(2)} MJ/m²</p>
-      <p>${bestCity.city} has the highest yearly average solar exposure among the selected datasets.</p>
+      <p>${bestCity.city} has the highest yearly average solar exposure among the selected datasets, making it the most suitable location for solar panel installation.</p>
     `;
 
     // Add a comparison table
@@ -469,25 +476,73 @@ function processFileData(fileData, timeSpan) {
   
   // Export chart as PDF
   const { jsPDF } = window.jspdf;
-
-  exportPdfButton.addEventListener('click', function () {
+  // Export chart as PDF with solar panel suggestion
+  exportPdfButton.addEventListener('click', async function () {
     const canvas = document.getElementById('solarChart');
     const chartImage = canvas.toDataURL('image/png', 1.0); // Convert chart to image
 
-    const pdf = new jsPDF('landscape'); // Create a new PDF in landscape mode
+    const pdf = new jsPDF(); // Create a new PDF
+    const pageWidth = pdf.internal.pageSize.getWidth();
+
+    // Calculate chart dimensions to fit the PDF width
+    const chartWidth = pageWidth - 20; // Leave some margin
+    const chartHeight = (canvas.height / canvas.width) * chartWidth;
+
     pdf.setFontSize(18);
     pdf.text('Solar Exposure Analysis', 10, 10); // Add a title
-    pdf.addImage(chartImage, 'PNG', 10, 20, 280, 150); // Add the chart image to the PDF
-    pdf.save('solar_analysis.pdf'); // Save the PDF
+    pdf.addImage(chartImage, 'PNG', 10, 20, chartWidth, chartHeight); // Add the chart image to the PDF
+
+    // Render the suggestion box as an image
+    const descriptionContainer = document.getElementById('region-description');
+    if (descriptionContainer && descriptionContainer.innerHTML.trim()) {
+      const suggestionCanvas = await html2canvas(descriptionContainer); // Render the suggestion box to a canvas
+      const suggestionImage = suggestionCanvas.toDataURL('image/png', 1.0); // Convert the canvas to an image
+
+      const suggestionHeight = (suggestionCanvas.height / suggestionCanvas.width) * chartWidth; // Scale to fit PDF width
+      pdf.addImage(suggestionImage, 'PNG', 10, chartHeight + 30, chartWidth, suggestionHeight); // Add the suggestion image below the chart
+    }
+
+    pdf.save('solar_analysis_with_suggestion.pdf'); // Save the PDF
   });
 
-  // Export chart as PNG/JPG
-  exportImageButton.addEventListener('click', function () {
+  // Export chart as PNG with solar panel suggestion
+  exportImageButton.addEventListener('click', async function () {
     const canvas = document.getElementById('solarChart');
-    canvas.toBlob(function (blob) {
+    const descriptionContainer = document.getElementById('region-description');
+
+    // Create a temporary canvas to combine the chart and suggestion
+    const tempCanvas = document.createElement('canvas');
+    const ctx = tempCanvas.getContext('2d');
+
+    // Set canvas dimensions based on the chart and suggestion box
+    const chartWidth = canvas.width;
+    const chartHeight = canvas.height;
+
+    let suggestionHeight = 0;
+    if (descriptionContainer && descriptionContainer.innerHTML.trim()) {
+      const suggestionCanvas = await html2canvas(descriptionContainer); // Render the suggestion box to a canvas
+      suggestionHeight = suggestionCanvas.height; // Get the height of the suggestion box
+      tempCanvas.width = chartWidth;
+      tempCanvas.height = chartHeight + suggestionHeight; // Combine chart and suggestion heights
+
+      // Draw the chart onto the temporary canvas
+      ctx.drawImage(canvas, 0, 0, chartWidth, chartHeight);
+
+      // Draw the suggestion box below the chart
+      ctx.drawImage(suggestionCanvas, 0, chartHeight, chartWidth, suggestionHeight);
+    } else {
+      tempCanvas.width = chartWidth;
+      tempCanvas.height = chartHeight;
+
+      // Draw only the chart if no suggestion box exists
+      ctx.drawImage(canvas, 0, 0, chartWidth, chartHeight);
+    }
+
+    // Export the combined canvas as an image
+    tempCanvas.toBlob(function (blob) {
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'solar_analysis.png'; // Default filename
+      link.download = 'solar_analysis_with_suggestion.png'; // Default filename
       link.click();
     }, 'image/png');
   });
