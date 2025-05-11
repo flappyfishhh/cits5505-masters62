@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Solar Data Analysis{% endblock %}
+
+{% block content %}
+<main class="px-4 py-12 sm:py-16 lg:py-20 space-y-10 max-w-screen-xl mx-auto">
+
+  <section class="bg-white p-6 rounded-lg shadow-md">
+
+    <!-- 🔥 Title + Bushfire Alert Button -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">Solar Data Analysis</h1>
+
+      <a href="{{ url_for('main.bushfire_alert', file_id=file_id) }}"
+         class="inline-flex items-center px-5 py-3 bg-red-600 text-white text-lg font-bold rounded-lg shadow-lg animate-pulse hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-300">
+        <svg class="w-6 h-6 mr-2 text-yellow-300 animate-ping-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 2C9.243 2 7 4.243 7 7c0 2.475 2.382 4.835 4.22 6.495.507.478 1.27.478 1.777 0C14.618 11.835 17 9.475 17 7c0-2.757-2.243-5-5-5zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
+        </svg>
+        Bushfire Alerts
+      </a>
+    </div>
+
+    {% if seasonal_patterns %}
+      <h2 class="text-xl font-semibold mt-6">Seasonal Patterns (Monthly Averages)</h2>
+      <table class="table-auto w-full border-collapse border border-gray-300 text-sm mt-2">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border border-gray-300 px-4 py-2">Month</th>
+            <th class="border border-gray-300 px-4 py-2">Average Solar Exposure (MJ/m²)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for month, value in seasonal_patterns.items() %}
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">{{ month }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <br>
+{% if suitability_grade and suitability_message %}
+  {% set box_color = "" %}
+  {% set icon = "" %}
+  {% set icon_color = "" %}
+
+  {% if "Not Suitable" in suitability_grade %}
+    {% set box_color = "bg-red-100 border-red-400 text-red-800" %}
+    {% set icon = "🚫" %}
+  {% elif "Off-grid" in suitability_grade %}
+    {% set box_color = "bg-yellow-100 border-yellow-400 text-yellow-800" %}
+    {% set icon = "💡" %}
+  {% elif "Grid-tied Residential" in suitability_grade %}
+    {% set box_color = "bg-blue-100 border-blue-400 text-blue-800" %}
+    {% set icon = "🏠💡" %}
+  {% elif "High Performance Zone" in suitability_grade %}
+    {% set box_color = "bg-green-100 border-green-400 text-green-800" %}
+    {% set icon = "🏭" %}
+  {% endif %}
+
+  <div class="border-l-4 p-4 rounded mb-6 {{ box_color }} flex items-start space-x-3 shadow">
+    <div class="text-2xl">{{ icon }}</div>
+    <div>
+      <p class="font-semibold text-base">{{ suitability_grade }}</p>
+      <p class="text-sm mt-1">{{ suitability_message }}</p>
+    </div>
+  </div>
+{% endif %}
+
+    {% endif %}
+
+    <!-- Threshold Table -->
+<div class="mt-10">
+  <h2 class="text-xl font-semibold mb-4">Solar Panel Efficiency</h2>
+  <table class="table-auto w-full border-collapse border border-gray-300 text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border border-gray-300 px-4 py-2">Solar Panel Use</th>
+        <th class="border border-gray-300 px-4 py-2">Minimum Recommended Threshold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Not Suitable</td>
+        <td class="border border-gray-300 px-4 py-2">&lt; 3.99 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Off-grid (basic lighting, small devices)</td>
+        <td class="border border-gray-300 px-4 py-2">≥ 4–5 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Grid-tied residential solar</td>
+        <td class="border border-gray-300 px-4 py-2">≥ 15 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">High-performance zones</td>
+        <td class="border border-gray-300 px-4 py-2">20–25+ MJ/m²/day</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    <!-- Anomalies -->
+    {% if anomalies %}
+      <h2 class="text-xl font-semibold mt-6">Anomalies Detected (Unusual Monthly Averages)</h2>
+      <table class="table-auto w-full border-collapse border border-gray-300 text-sm mt-2">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border border-gray-300 px-4 py-2">Month-Year</th>
+            <th class="border border-gray-300 px-4 py-2">Average Solar Exposure (MJ/m²)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for date, value in anomalies.items() %}
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">{{ date }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="mt-2">No anomalies detected.</p>
+    {% endif %}
+
+    <!-- Trend Plot -->
+    {% if trend_plot %}
+    <div class="plot-container mt-6">
+      <h2 class="text-xl font-semibold">Trend Over Time</h2>
+      <br>
+      <form method="get" class="flex flex-wrap gap-4 items-center mb-6">
+        <div>
+          <label class="block font-medium">Start Date</label>
+          <input type="month" name="start_date" value="{{ request.args.get('start_date', '') }}"
+                 class="border px-2 py-1 rounded">
+        </div>
+        <div>
+          <label class="block font-medium">End Date</label>
+          <input type="month" name="end_date" value="{{ request.args.get('end_date', '') }}"
+                 class="border px-2 py-1 rounded">
+        </div>
+        <div class="mt-6">
+          <button class="bg-blue-600 text-white px-4 py-2 rounded">Apply Filter</button>
+        </div>
+      </form>
+
+      {{ trend_plot | safe }}
+    </div>
+    {% endif %}
+
+  </section>
+
+</main>
+{% endblock %}

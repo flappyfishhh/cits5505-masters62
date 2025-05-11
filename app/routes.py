@@ -18,6 +18,42 @@ from app.forms import (
     ForgotPasswordForm, ResetPasswordForm,
     UpdateEmailForm, ChangePasswordForm, UpdateFileForm
 )
+from datetime import datetime, timezone, timedelta
+now = datetime.now(timezone.utc)
+
+# ================================
+# # Solar Panel Suitability Classification Helper
+# ================================
+
+def suitability_grade(avg_exposure):
+    """
+    Classifies solar suitability based on average daily solar exposure.
+    Parameters:
+        avg_exposure (float): Average daily solar exposure in MJ/m².
+    Returns:
+        tuple: (grade, message)
+    """
+    if avg_exposure < 3.99:
+        return (
+            "Not Suitable",
+            f"Average Solar Exposure value is less than 3.99 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
+        )
+    elif avg_exposure <= 4.0:
+        return (
+            "Off-grid",
+            f"Average Solar Exposure value is between 4 and 5 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
+        )
+    elif avg_exposure < 20.0:
+        return (
+            "Grid-tied Residential",
+            f"Average Solar Exposure value is between 4.01 and less than 20.0 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
+        )
+    else:
+        return (
+            "High Performance Zone",
+            f"Average Solar Exposure value is greater than or equal to 20.0 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
+        )
+
 
 # ================================
 # Upload Blueprint
@@ -230,8 +266,9 @@ def upload():
         ensure_upload_folder()
         f = form.csv_file.data
         orig = secure_filename(f.filename)
-        ts = datetime.now(UTC).strftime('%Y%m%d%H%M%S')
+        ts = datetime.now(UTC).strftime('%Y%m%d%H%M%S')  
         saved = f"{current_user.id}_{ts}_{orig}"
+        saved = f"{current_user.id}_{orig}" 
         path = os.path.join(UPLOAD_FOLDER, saved)
         f.save(os.path.join(current_app.root_path, path))
 
@@ -446,3 +483,307 @@ def get_file_data(file_id):
     current_app.logger.info(f"Prepared data: {data}")
 
     return jsonify({"filename": file_record.filename, "data": data})
+
+	
+# ================================
+# Solar Data Analysis (Trend + Anomalies)
+# ================================
+@main.route('/solar_analysis/<int:file_id>', methods=['GET'])
+@login_required
+def solar_analysis(file_id):
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+
+    file = FileUpload.query.get_or_404(file_id)
+
+    if file.user_id != current_user.id and current_user not in file.share_with:
+        abort(403)
+
+    uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
+    if not uploads:
+        flash('No data available for analysis.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    df = pd.DataFrame([row.data for row in uploads])
+    df.columns = [col.strip() for col in df.columns]
+
+    required_cols = {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}
+    if not required_cols.issubset(df.columns):
+        flash('Dataset must contain Year, Month, Day, and Daily global solar exposure (MJ/m*m)', 'danger')
+        return redirect(url_for('main.dashboard'))
+
+    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Daily global solar exposure (MJ/m*m)'] = pd.to_numeric(
+        df['Daily global solar exposure (MJ/m*m)'], errors='coerce'
+    )
+    df.dropna(subset=['Date', 'Daily global solar exposure (MJ/m*m)'], inplace=True)
+
+    # Apply date filter if provided
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    if start_date:
+        df = df[df["Date"] >= pd.to_datetime(start_date)]
+    if end_date:
+        df = df[df["Date"] <= pd.to_datetime(end_date)]
+
+    monthly_avg = df.groupby(df['Date'].dt.to_period('M'))['Daily global solar exposure (MJ/m*m)'].mean()
+    monthly_avg.index = monthly_avg.index.to_timestamp()
+
+    seasonal_patterns = df.groupby(df['Date'].dt.month_name())['Daily global solar exposure (MJ/m*m)'].mean().round(2).to_dict()
+
+    Q1 = monthly_avg.quantile(0.25)
+    Q3 = monthly_avg.quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    anomalies = monthly_avg[(monthly_avg < lower_bound) | (monthly_avg > upper_bound)].round(2).to_dict()
+
+    overall_avg = df['Daily global solar exposure (MJ/m*m)'].mean()
+    grade, suitability_message = suitability_grade(overall_avg)
+
+    trend_fig = go.Figure()
+    trend_fig.add_trace(go.Scatter(
+        x=monthly_avg.index,
+        y=monthly_avg.values,
+        mode='lines+markers',
+        name='Monthly Avg Solar Exposure'
+    ))
+    trend_fig.update_layout(
+        title='Monthly Average Solar Exposure Over Time',
+        xaxis_title='Date',
+        yaxis_title='Daily Global Solar Exposure (MJ/m²)',
+        height=500
+    )
+    trend_plot = trend_fig.to_html(full_html=False)
+
+    return render_template('analysis.html',
+                           seasonal_patterns=seasonal_patterns,
+                           anomalies=anomalies,
+                           trend_plot=trend_plot,
+                           suitability_message=suitability_message,
+                           suitability_grade=grade,
+                           file_id=file_id)
+
+# ================================
+# Bushfire Alert Analysis
+# ================================
+@main.route('/bushfire_alert/<int:file_id>')
+@login_required
+def bushfire_alert(file_id):
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+    from sklearn.linear_model import LogisticRegression, LinearRegression
+
+    file = FileUpload.query.get_or_404(file_id)
+    if file.user_id != current_user.id and current_user not in file.share_with:
+        abort(403)
+
+    uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
+    if not uploads:
+        flash('No data available to analyze bushfire alerts.', 'warning')
+        return redirect(url_for('main.index'))
+
+    df = pd.DataFrame([row.data for row in uploads])
+    df.columns = [col.strip() for col in df.columns]
+
+    required_cols = {'Year', 'Month', 'Day', 'Daily global solar exposure (MJ/m*m)'}
+    if not required_cols.issubset(df.columns):
+        flash('Dataset must contain Year, Month, Day, and Daily global solar exposure (MJ/m*m)', 'danger')
+        return redirect(url_for('main.index'))
+
+    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Exposure'] = pd.to_numeric(df['Daily global solar exposure (MJ/m*m)'], errors='coerce')
+    df = df.dropna(subset=['Date', 'Exposure']).sort_values(by='Date')
+    df['Month'] = df['Date'].dt.month
+    df['Year'] = df['Date'].dt.year
+
+    #  Bushfire streak detection
+    df['HighRisk'] = ((df['Exposure'] >= 30) & (df['Month'].isin([11, 12, 1, 2]))).astype(int)
+    df['StreakGroup'] = (df['HighRisk'] != df['HighRisk'].shift()).cumsum()
+
+    high_risk_df = df[df['HighRisk'] == 1]
+    streaks = high_risk_df.groupby('StreakGroup').agg({
+        'Date': ['min', 'max', 'count']
+    }).reset_index()
+    streaks.columns = ['StreakID', 'StartDate', 'EndDate', 'Days']
+    alerts = streaks[streaks['Days'] >= 3].sort_values(by='StartDate', ascending=False)
+    total_alerts = len(alerts)
+
+    #  Pagination for alert streaks
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    total_pages = (len(alerts) + per_page - 1) // per_page
+    start = (page - 1) * per_page
+    end = start + per_page
+    alerts_paginated = alerts.iloc[start:end]
+
+
+    #  Forecast: Monthly risk using LogisticRegression
+    monthly = df.groupby(df['Date'].dt.to_period('M')).agg({
+        'Exposure': 'mean',
+        'HighRisk': 'max'
+    }).reset_index()
+    monthly['Date'] = monthly['Date'].dt.to_timestamp()
+    monthly['TimeIndex'] = np.arange(len(monthly))
+
+    X = monthly[['TimeIndex']]
+    y = monthly['HighRisk']
+
+    if y.nunique() < 2:
+        forecast_plot = "<p class='text-sm text-red-600'> Forecast unavailable: Not enough variation in bushfire data (only one class detected).</p>"
+    else:
+        model = LogisticRegression()
+        model.fit(X, y)
+
+        future_index = np.arange(X['TimeIndex'].max() + 1, X['TimeIndex'].max() + 7).reshape(-1, 1)
+        future_index_df = pd.DataFrame(future_index, columns=['TimeIndex'])
+        future_probs = model.predict_proba(future_index_df)[:, 1]
+        future_dates = pd.date_range(monthly['Date'].max() + pd.offsets.MonthBegin(1), periods=6, freq='MS')
+        future_df = pd.DataFrame({'Date': future_dates, 'PredictedRisk': future_probs})
+
+        #  Color coding
+        def risk_color(prob):
+            if prob >= 0.75:
+                return 'red'
+            elif prob >= 0.5:
+                return 'orange'
+            else:
+                return 'green'
+
+        future_df['Color'] = future_df['PredictedRisk'].apply(risk_color)
+
+        #  Forecast Plot
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=future_df['Date'].dt.strftime('%b %Y'),
+            y=future_df['PredictedRisk'],
+            marker_color=future_df['Color'],
+            text=(future_df['PredictedRisk'] * 100).round(1).astype(str) + '%',
+            textposition='outside',
+            name='Predicted Risk'
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=future_df['Date'].dt.strftime('%b %Y'),
+            y=[0.75] * len(future_df),
+            mode='lines',
+            line=dict(dash='dash', color='black'),
+            name='High Risk Threshold (75%)'
+        ))
+
+        fig.update_layout(
+            title="6-Month Bushfire Risk Forecast",
+            xaxis_title="Month",
+            yaxis_title="Risk Probability",
+            yaxis=dict(range=[0, 1]),
+            height=500
+        )
+
+        forecast_plot = fig.to_html(full_html=False)
+
+    #  7-day prediction using LinearRegression
+    df_sorted = df.reset_index(drop=True)
+    df_sorted['DayIndex'] = np.arange(len(df_sorted))
+    X_lin = df_sorted[['DayIndex']]
+    y_lin = df_sorted['Exposure']
+    lin_model = LinearRegression()
+    lin_model.fit(X_lin, y_lin)
+
+    future_index = np.arange(X_lin['DayIndex'].max() + 1, X_lin['DayIndex'].max() + 8).reshape(-1, 1)
+    future_index_df = pd.DataFrame(future_index, columns=['DayIndex'])  # fixes warning
+    future_dates = pd.date_range(start=df_sorted['Date'].max() + pd.Timedelta(days=1), periods=7)
+    predicted_exposure = lin_model.predict(future_index_df)
+
+    seven_day_df = pd.DataFrame({
+        'Date': future_dates,
+        'PredictedExposure': predicted_exposure
+    })
+    seven_day_df['Month'] = seven_day_df['Date'].dt.month
+    seven_day_df['Risk'] = (seven_day_df['PredictedExposure'] >= 30) & (seven_day_df['Month'].isin([11, 12, 1, 2]))
+    alert_days = seven_day_df[seven_day_df['Risk'] == True][['Date', 'PredictedExposure']]
+
+
+   
+
+    return render_template(
+        'bushfire_alert.html',
+        alerts=alerts_paginated,
+        total_alerts=total_alerts,
+        current_page=page,
+        total_pages=total_pages,
+        file_id=file_id,
+        forecast_plot=forecast_plot,
+        seven_day_alerts=alert_days
+    )
+
+# ================================
+# BushfireAlert_PDF Export
+# ================================
+from flask import render_template, make_response, abort, flash, redirect, url_for
+from flask_login import login_required, current_user
+import pandas as pd
+from datetime import datetime
+import io
+from xhtml2pdf import pisa
+
+@main.route('/export_bushfire_pdf/<int:file_id>')
+@login_required
+def export_bushfire_pdf(file_id):
+    file = FileUpload.query.get_or_404(file_id)
+
+    if file.user_id != current_user.id and current_user not in file.share_with:
+        abort(403)
+
+    uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
+    if not uploads:
+        flash('No data available to export.', 'warning')
+        return redirect(url_for('main.index'))
+
+    df = pd.DataFrame([row.data for row in uploads])
+    df.columns = [col.strip() for col in df.columns]
+    df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Exposure'] = pd.to_numeric(df['Daily global solar exposure (MJ/m*m)'], errors='coerce')
+    df.dropna(subset=['Date', 'Exposure'], inplace=True)
+    df.sort_values(by='Date', inplace=True)
+    df['Month'] = df['Date'].dt.month
+    df['HighRisk'] = ((df['Exposure'] >= 30) & (df['Month'].isin([11, 12, 1, 2]))).astype(int)
+    df['StreakGroup'] = (df['HighRisk'] != df['HighRisk'].shift()).cumsum()
+
+    high_risk_df = df[df['HighRisk'] == 1]
+    streaks = high_risk_df.groupby('StreakGroup').agg({
+        'Date': ['min', 'max', 'count']
+    }).reset_index()
+    streaks.columns = ['StreakID', 'StartDate', 'EndDate', 'Days']
+    alerts = streaks[streaks['Days'] >= 3].sort_values(by='StartDate', ascending=False)
+
+    # 7-Day forecast summary
+    today = df['Date'].max()
+    next_7 = df[(df['Date'] > today) & (df['Date'] <= today + pd.Timedelta(days=7))]
+
+    seven_day_alert = False
+    if not next_7.empty:
+        seven_day_alert = any(next_7['Exposure'] >= 30)
+
+     # 7-Day forecast summary
+    today = df['Date'].max()
+    next_7 = df[(df['Date'] > today) & (df['Date'] <= today + pd.Timedelta(days=7))]
+
+    seven_day_alert = not next_7.empty and any(next_7['Exposure'] >= 30)
+
+    html = render_template('bushfire_report.html',
+                           alerts=alerts,
+                           file=file,
+                           chart_src=None,
+                           now=datetime.now(),
+                           seven_day_alert=seven_day_alert)
+
+    pdf = io.BytesIO()
+    pisa.CreatePDF(html, dest=pdf)
+    pdf.seek(0)
+
+    response = make_response(pdf.read())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=bushfire_alert_report.pdf'
+    return response
