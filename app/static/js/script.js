@@ -210,49 +210,95 @@ timeSpanDropdown.addEventListener('change', function () {
     selectedYear = parseInt(this.value, 10); // Store the selected year
   });
 
-    // Function to calculate the total solar exposure for the selected dataset and year
-    function calculateTotalSolarExposure(data, selectedYear) {
-      const filteredData = data.filter(row => {
-        const year = new Date(row.date).getFullYear();
-        return selectedYear ? year === selectedYear : true; // Match the selected year or include all years
-      });
-    
-      return filteredData.reduce((sum, row) => sum + row.solar_exposure, 0);
-    
+    // Function to calculate the yearly average solar exposure for a dataset
+function calculateYearlyAverage(data) {
+  const groupedData = {};
 
-    // Calculate the total solar exposure
-    const total = filteredData.reduce((sum, row) => sum + row.solar_exposure, 0);
+  // Group data by year and calculate the total solar exposure for each year
+  data.forEach(row => {
+    const year = new Date(row.date).getFullYear();
+    if (!groupedData[year]) groupedData[year] = { total: 0, count: 0 };
+    groupedData[year].total += row.solar_exposure;
+    groupedData[year].count += 1;
+  });
 
-    return total; // Return the total solar exposure
-  }
+  // Calculate the total solar exposure across all years
+  const totalSolarExposure = Object.values(groupedData).reduce((sum, yearData) => sum + yearData.total, 0);
 
-  // Function to display the solar panel recommendation based on total solar exposure
-function displayRegionDescription(total) {
-  const descriptionContainer = document.getElementById('region-description');
-  let recommendation = '';
-  let message = '';
+  // Calculate the number of unique years in the dataset
+  const numberOfYears = Object.keys(groupedData).length;
 
-  if (total < 4000) {
-    recommendation = 'Usually not recommended (unless heavily subsidized)';
-    message = 'The solar exposure in this region is below 4,000 MJ/m²/year, making it uneconomical for household solar panels unless there are subsidies or other motivations.';
-  } else if (total >= 4000 && total < 6000) {
-    recommendation = 'Moderate (check financial payback time)';
-    message = 'The solar exposure in this region is between 4,000 and 6,000 MJ/m²/year. It is a moderate candidate for solar panels, but you should check the financial payback time.';
-  } else if (total >= 6000 && total < 8000) {
-    recommendation = 'Good candidate for solar installation';
-    message = 'The solar exposure in this region is between 6,000 and 8,000 MJ/m²/year, making it a good candidate for solar panel installation.';
-  } else if (total >= 8000) {
-    recommendation = 'Excellent location for solar';
-    message = 'The solar exposure in this region exceeds 8,000 MJ/m²/year, making it an excellent location for solar panel installation.';
-  }
+  // Calculate the overall yearly average
+  const yearlyAverage = totalSolarExposure / numberOfYears;
 
-  descriptionContainer.innerHTML = `
-    <h3>Region Solar Panel Recommendation</h3>
-    <p><strong>Annual Accumulated Solar Exposure:</strong> ${total.toFixed(2)} MJ/m²/year</p>
-    <p><strong>Recommendation:</strong> ${recommendation}</p>
-    <p>${message}</p>
-  `;
+  return yearlyAverage;
 }
+
+// Function to display suggestions based on yearly averages
+function displaySuggestions(dataArray, cityNames) {
+  const descriptionContainer = document.getElementById('region-description');
+  descriptionContainer.innerHTML = ''; // Clear previous suggestions
+
+  if (dataArray.length === 1) {
+    // Single dataset: Provide a recommendation for the city
+    const yearlyAverage = calculateYearlyAverage(dataArray[0].data);
+
+    let recommendation = '';
+    if (yearlyAverage < 4000) {
+      recommendation = 'Usually not recommended (unless heavily subsidized)';
+    } else if (yearlyAverage >= 4000 && yearlyAverage < 6000) {
+      recommendation = 'Moderate (check financial payback time)';
+    } else if (yearlyAverage >= 6000 && yearlyAverage < 8000) {
+      recommendation = 'Good candidate for solar installation';
+    } else {
+      recommendation = 'Excellent location for solar';
+    }
+
+    descriptionContainer.innerHTML = `
+      <h3>Solar Panel Recommendation for ${cityNames[0]}</h3>
+      <p><strong>Yearly Average Solar Exposure:</strong> ${yearlyAverage.toFixed(2)} MJ/m²</p>
+      <p><strong>Recommendation:</strong> ${recommendation}</p>
+    `;
+  } else {
+    // Multiple datasets: Compare cities and suggest the best one
+    const cityAverages = dataArray.map((data, index) => {
+      const yearlyAverage = calculateYearlyAverage(data.data);
+      return { city: cityNames[index], average: yearlyAverage };
+    });
+
+    cityAverages.sort((a, b) => b.average - a.average); // Sort cities by average solar exposure
+
+    const bestCity = cityAverages[0];
+    descriptionContainer.innerHTML = `
+      <h3>Best City for Solar Panel Installation</h3>
+      <p><strong>City:</strong> ${bestCity.city}</p>
+      <p><strong>Yearly Average Solar Exposure:</strong> ${bestCity.average.toFixed(2)} MJ/m²</p>
+      <p>${bestCity.city} has the highest yearly average solar exposure among the selected datasets.</p>
+    `;
+
+    // Add a comparison table
+    const table = document.createElement('table');
+    table.classList.add('comparison-table');
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>Yearly Average Solar Exposure (MJ/m²)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cityAverages.map(city => `
+          <tr>
+            <td>${city.city}</td>
+            <td>${city.average.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+    descriptionContainer.appendChild(table);
+  }
+}
+// Update the visualize button logic to include suggestions
 visualizeButton.addEventListener('click', function () {
   const selectedFileIds = [];
   const cityNames = []; // Store city names for the legend
@@ -279,6 +325,9 @@ visualizeButton.addEventListener('click', function () {
         // Process data for the chart
         const chartDataArray = dataArray.map(data => processFileData(data.data, selectedTimeSpan));
         renderChart(chartDataArray, cityNames); // Render the chart
+
+        // Display suggestions based on the datasets
+        displaySuggestions(dataArray, cityNames);
       })
       .catch(error => {
         console.error('Error fetching file data:', error);
