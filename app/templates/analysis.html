@@ -39,54 +39,67 @@
           {% endfor %}
         </tbody>
       </table>
+      <br>
+{% if suitability_grade and suitability_message %}
+  {% set box_color = "" %}
+  {% set icon = "" %}
+  {% set icon_color = "" %}
 
-      {% if suitability_grade and suitability_message %}
-        {% set bg_color = "" %}
-        {% if "Highly Suitable" in suitability_grade %}
-          {% set bg_color = "bg-blue-100 border-blue-300 text-blue-900" %}
-        {% elif "Not Suitable" in suitability_grade %}
-          {% set bg_color = "bg-red-100 border-red-300 text-red-900" %}
-        {% elif "Moderately Suitable" in suitability_grade %}
-          {% set bg_color = "bg-green-100 border-green-300 text-green-900" %}
-        {% endif %}
-        <div class="p-4 mt-4 rounded border {{ bg_color }}">
-          <strong>{{ suitability_grade }}:</strong> {{ suitability_message }}
-        </div>
-      {% endif %}
-    {% else %}
-      <p class="mt-2">No seasonal pattern data available.</p>
+  {% if "Not Suitable" in suitability_grade %}
+    {% set box_color = "bg-red-100 border-red-400 text-red-800" %}
+    {% set icon = "🚫" %}
+  {% elif "Off-grid" in suitability_grade %}
+    {% set box_color = "bg-yellow-100 border-yellow-400 text-yellow-800" %}
+    {% set icon = "💡" %}
+  {% elif "Grid-tied Residential" in suitability_grade %}
+    {% set box_color = "bg-blue-100 border-blue-400 text-blue-800" %}
+    {% set icon = "🏠💡" %}
+  {% elif "High Performance Zone" in suitability_grade %}
+    {% set box_color = "bg-green-100 border-green-400 text-green-800" %}
+    {% set icon = "🏭" %}
+  {% endif %}
+
+  <div class="border-l-4 p-4 rounded mb-6 {{ box_color }} flex items-start space-x-3 shadow">
+    <div class="text-2xl">{{ icon }}</div>
+    <div>
+      <p class="font-semibold text-base">{{ suitability_grade }}</p>
+      <p class="text-sm mt-1">{{ suitability_message }}</p>
+    </div>
+  </div>
+{% endif %}
+
     {% endif %}
 
     <!-- Threshold Table -->
-    <div class="mt-10">
-      <h2 class="text-xl font-semibold mb-4">Recommended Solar Exposure Thresholds</h2>
-      <table class="table-auto w-full border-collapse border border-gray-300 text-sm">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="border border-gray-300 px-4 py-2">Purpose</th>
-            <th class="border border-gray-300 px-4 py-2">Threshold (MJ/m²/day)</th>
-            <th class="border border-gray-300 px-4 py-2">Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="border border-gray-300 px-4 py-2">Suboptimal / Marginal</td>
-            <td class="border border-gray-300 px-4 py-2">&lt; 4.0</td>
-            <td class="border border-gray-300 px-4 py-2">May not justify cost unless subsidized or used with batteries.</td>
-          </tr>
-          <tr>
-            <td class="border border-gray-300 px-4 py-2">Minimum Viable (Residential)</td>
-            <td class="border border-gray-300 px-4 py-2">&ge; 4.0</td>
-            <td class="border border-gray-300 px-4 py-2">Suitable for basic rooftop solar (e.g., 3–6 kW systems).</td>
-          </tr>
-          <tr>
-            <td class="border border-gray-300 px-4 py-2">Optimal Investment Zone</td>
-            <td class="border border-gray-300 px-4 py-2">&ge; 5.0</td>
-            <td class="border border-gray-300 px-4 py-2">Offers better return on investment.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<div class="mt-10">
+  <h2 class="text-xl font-semibold mb-4">Solar Panel Efficiency</h2>
+  <table class="table-auto w-full border-collapse border border-gray-300 text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border border-gray-300 px-4 py-2">Solar Panel Use</th>
+        <th class="border border-gray-300 px-4 py-2">Minimum Recommended Threshold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Not Suitable</td>
+        <td class="border border-gray-300 px-4 py-2">&lt; 3.99 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Off-grid (basic lighting, small devices)</td>
+        <td class="border border-gray-300 px-4 py-2">≥ 4–5 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Grid-tied residential solar</td>
+        <td class="border border-gray-300 px-4 py-2">≥ 15 MJ/m²/day</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">High-performance zones</td>
+        <td class="border border-gray-300 px-4 py-2">20–25+ MJ/m²/day</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
     <!-- Anomalies -->
     {% if anomalies %}
