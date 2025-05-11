@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bushfire Alert Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      color: #333;
+      font-size: 13px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 0.5em;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 2em;
+      margin-bottom: 0.5em;
+    }
+    .meta {
+      font-size: 12px;
+      margin-bottom: 1.5em;
+      color: #666;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    th, td {
+      padding: 0.5em 0.75em;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .no-alerts {
+      font-style: italic;
+      margin-top: 2em;
+      color: #666;
+    }
+    .footer {
+      font-size: 11px;
+      margin-top: 3em;
+      color: #999;
+      text-align: center;
+    }
+    .summary {
+      background-color: #f8f8f8;
+      border: 1px solid #ccc;
+      padding: 1em;
+      margin-bottom: 2em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bushfire Alert Report</h1>
+  <div class="meta">
+    File: <strong>{{ file.filename }}</strong><br>
+    User: {{ file.user.email if file.user else "N/A" }}<br>
+    Generated on {{ now.strftime('%A, %d %B %Y at %H:%M') }}
+  </div>
+
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Total Alerts:</strong> {{ alerts|length }}</p>
+    {% if not alerts.empty %}
+      <p><strong>Longest Streak:</strong> {{ alerts['Days'].max() }} days</p>
+      <p><strong>Most Recent Alert:</strong> {{ alerts['EndDate'].max().strftime('%Y-%m-%d') }}</p>
+    {% endif %}
+  </div>
+
+
+<h2>7-Day Bushfire Risk Forecast</h2>
+  {% if seven_day_alert %}
+    <p class="no-alerts" style="color: red;">
+      🔥 Bushfire risk detected in the next 7 days based on expected solar exposure.
+    </p>
+  {% else %}
+    <p class="no-alerts" style="color: green;">
+      ✅ No Bushfire Risk Detected.<br>
+      The 7-day forecast shows no high-risk days based on expected solar exposure.
+    </p>
+
+    <h2>Notes</h2>
+  <p>
+    A "streak" is defined as 3 or more consecutive days with high solar exposure (> 30 MJ/m²)
+    during peak bushfire season months (Nov–Feb). This report summarizes past patterns to support
+    risk awareness, but does not replace official emergency alerts.
+  </p>
+
+  <h2>Detected Bushfire Risk Periods</h2>
+  {% if alerts.empty %}
+    <p class="no-alerts">✅ No bushfire alert periods were detected in this dataset.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Consecutive Days</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in alerts.itertuples() %}
+        <tr {% if row.Days >= 5 %}style="background-color:#ffeaea;"{% endif %}>
+          <td>{{ row.StartDate.strftime('%Y-%m-%d') }}</td>
+          <td>{{ row.EndDate.strftime('%Y-%m-%d') }}</td>
+          <td>{{ row.Days }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  
+  {% endif %}
+
+
+  <div class="footer">
+    SolarAnalytics | www.solaranalytics.com | support@solaranalytics.com
+  </div>
+
+</body>
+</html>
