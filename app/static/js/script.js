@@ -393,69 +393,85 @@ function processFileData(fileData, timeSpan) {
   return { labels, values };
 }
 
-  function renderChart(chartDataArray, cityNames) {
-    const canvas = document.getElementById('solarChart');
-    const ctx = canvas.getContext('2d');
-  
-    // Destroy the existing chart instance if it exists
-    if (solarChartInstance) {
-      solarChartInstance.destroy();
-      solarChartInstance = null;
-    }
-  
-    const combinedLabels = Array.from(new Set(chartDataArray.flatMap(data => data.labels))).sort();
-  
-    const datasets = chartDataArray.map((chartData, index) => {
-      const values = combinedLabels.map(label => {
-        const labelIndex = chartData.labels.indexOf(label);
-        return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing labels
-      });
-  
-      return {
-        label: cityNames[index],
-        data: values,
-        borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
-        borderWidth: 2,
-        fill: false
-      };
+function renderChart(chartDataArray, cityNames) {
+  const canvas = document.getElementById('solarChart');
+  const ctx = canvas.getContext('2d');
+
+  // Destroy the existing chart instance if it exists
+  if (solarChartInstance) {
+    solarChartInstance.destroy();
+    solarChartInstance = null;
+  }
+
+  const combinedLabels = Array.from(new Set(chartDataArray.flatMap(data => data.labels))).sort();
+
+  const datasets = chartDataArray.map((chartData, index) => {
+    const values = combinedLabels.map(label => {
+      const labelIndex = chartData.labels.indexOf(label);
+      return labelIndex !== -1 ? chartData.values[labelIndex] : null; // Fill null for missing labels
     });
-  
-    solarChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: combinedLabels,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                const value = context.raw;
-                return value !== null ? `Value: ${value.toFixed(2)}` : 'No Data';
-              }
+
+    return {
+      label: cityNames[index],
+      data: values,
+      borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 3, // Adjust point size for better visibility
+      pointHoverRadius: 6 // Highlight points on hover
+    };
+  });
+
+  solarChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: combinedLabels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const value = context.raw;
+              return value !== null ? `Value: ${value.toFixed(2)}` : 'No Data';
             }
           }
         },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Time'
-            }
+        zoom: {
+          pan: {
+            enabled: true, // Enable panning
+            mode: 'x', // Allow panning only on the x-axis
           },
-          y: {
-            title: {
-              display: true,
-              text: 'Average Solar Exposure (MJ/m²)'
-            }
+          zoom: {
+            wheel: {
+              enabled: true, // Enable zooming with the mouse wheel
+            },
+            pinch: {
+              enabled: true, // Enable zooming with touch gestures
+            },
+            mode: 'x', // Allow zooming only on the x-axis
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Average Solar Exposure (MJ/m²)'
           }
         }
       }
-    });
-  }
-
+    }
+  });
+}
   clearChartButton.addEventListener('click', function () {
     if (solarChartInstance) {
       solarChartInstance.destroy(); // Destroy the existing chart instance
