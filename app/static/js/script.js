@@ -177,12 +177,52 @@ yearDropdown.addEventListener('change', function () {
     selectedYear = parseInt(this.value, 10); // Store the selected year
   });
 
-  // Add event listener for the visualize button
+    // Function to calculate the total solar exposure for the selected dataset and year
+  function calculateTotalSolarExposure(data, selectedYear) {
+    // Filter the data for the selected year
+    const filteredData = data.filter(row => {
+      const year = new Date(row.date).getFullYear(); // Extract the year from the date
+      return selectedYear ? year === selectedYear : true; // Match the selected year
+    });
+
+    // Calculate the total solar exposure
+    const total = filteredData.reduce((sum, row) => sum + row.solar_exposure, 0);
+
+    return total; // Return the total solar exposure
+  }
+
+  // Function to display the solar panel recommendation based on total solar exposure
+function displayRegionDescription(total) {
+  const descriptionContainer = document.getElementById('region-description');
+  let recommendation = '';
+  let message = '';
+
+  if (total < 4000) {
+    recommendation = 'Usually not recommended (unless heavily subsidized)';
+    message = 'The solar exposure in this region is below 4,000 MJ/m²/year, making it uneconomical for household solar panels unless there are subsidies or other motivations.';
+  } else if (total >= 4000 && total < 6000) {
+    recommendation = 'Moderate (check financial payback time)';
+    message = 'The solar exposure in this region is between 4,000 and 6,000 MJ/m²/year. It is a moderate candidate for solar panels, but you should check the financial payback time.';
+  } else if (total >= 6000 && total < 8000) {
+    recommendation = 'Good candidate for solar installation';
+    message = 'The solar exposure in this region is between 6,000 and 8,000 MJ/m²/year, making it a good candidate for solar panel installation.';
+  } else if (total >= 8000) {
+    recommendation = 'Excellent location for solar';
+    message = 'The solar exposure in this region exceeds 8,000 MJ/m²/year, making it an excellent location for solar panel installation.';
+  }
+
+  descriptionContainer.innerHTML = `
+    <h3>Region Solar Panel Recommendation</h3>
+    <p><strong>Annual Accumulated Solar Exposure:</strong> ${total.toFixed(2)} MJ/m²/year</p>
+    <p><strong>Recommendation:</strong> ${recommendation}</p>
+    <p>${message}</p>
+  `;
+}
   visualizeButton.addEventListener('click', function () {
     const selectedFileIds = [];
     const cityNames = []; // Store city names for the legend
-
-    // Loop through all dropdowns and collect valid selections
+  
+    // Collect selected datasets
     const dropdowns = dropdownContainer.querySelectorAll('select');
     dropdowns.forEach((dropdown) => {
       if (dropdown && dropdown.value) {
@@ -190,7 +230,7 @@ yearDropdown.addEventListener('change', function () {
         cityNames.push(dropdown.options[dropdown.selectedIndex].text); // Get the city name
       }
     });
-
+  
     if (selectedFileIds.length > 0) {
       const fetchPromises = selectedFileIds.map(fileId =>
         fetch(`/get-file-data/${fileId}`).then(response => {
@@ -198,22 +238,32 @@ yearDropdown.addEventListener('change', function () {
           return response.json();
         })
       );
-
+  
       Promise.all(fetchPromises)
         .then(dataArray => {
-          // Filter data based on the selected year
-          const filteredDataArray = dataArray.map(data => {
-            return {
-              ...data,
-              data: data.data.filter(row => {
-                const year = new Date(row.date).getFullYear();
-                return selectedYear ? year === selectedYear : true; // Filter by year if selected
-              })
-            };
-          });
-
-          const chartDataArray = filteredDataArray.map(data => processFileData(data.data, selectedTimeSpan));
-          renderChart(chartDataArray, cityNames); // Pass city names to the renderChart function
+          if (dataArray.length > 1) {
+            // Multiple datasets selected: Show a warning in the suggestion bar
+            const descriptionContainer = document.getElementById('region-description');
+            if (!descriptionContainer) {
+              console.warn('The region-description element is missing in the HTML.');
+              return;
+            }
+          
+            descriptionContainer.innerHTML = `
+              <h3>Solar Panel Suggestion</h3>
+              <p>Please select only one dataset to get accurate solar panel recommendations.</p>
+            `;
+          } else {
+            // Single dataset selected: Calculate total solar exposure
+            const total = calculateTotalSolarExposure(dataArray[0].data, selectedYear);
+          
+            // Display the recommendation based on the total
+            displayRegionDescription(total);
+          }
+  
+          // Process data for the chart
+          const chartDataArray = dataArray.map(data => processFileData(data.data, selectedTimeSpan));
+          renderChart(chartDataArray, cityNames); // Render the chart
         })
         .catch(error => {
           console.error('Error fetching file data:', error);
