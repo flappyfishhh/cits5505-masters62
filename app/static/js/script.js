@@ -5,7 +5,7 @@ $(function () {
   const visualizeButton = document.getElementById('visualize-datasets');
   const exportPdfButton = document.getElementById('export-pdf');
   const exportImageButton = document.getElementById('export-image');
-  const timeSpanButtons = document.querySelectorAll('.time-span-button');
+  const timeSpanDropdown = document.getElementById('time-span-select'); // New dropdown for time span
   const yearDropdown = document.getElementById('year-select');
   const loadDatasetButton = document.getElementById('load-dataset');
   const clearChartButton = document.getElementById('clear-chart');
@@ -25,10 +25,24 @@ $(function () {
 
   const populateYearDropdown = (dataArray) => {
     const allYears = new Set(dataArray.flatMap(data => data.data.map(row => new Date(row.date).getFullYear())));
-    yearDropdown.innerHTML = `<option value="" disabled selected>Select a year</option><option value="all">Select All</option>`;
+    yearDropdown.innerHTML = `<option value="" disabled selected>Select a year</option><option value="all">All Years</option>`;
     Array.from(allYears).sort().forEach(year => {
       yearDropdown.innerHTML += `<option value="${year}">${year}</option>`;
     });
+  };
+
+  const updateTimeSpanOptions = () => {
+    const selectedYear = yearDropdown.value;
+    timeSpanDropdown.innerHTML = '';
+    if (selectedYear === 'all') {
+      timeSpanDropdown.innerHTML += `<option value="year">Year</option>`;
+      timeSpanDropdown.innerHTML += `<option value="6months">6 Months</option>`;
+    } else {
+      timeSpanDropdown.innerHTML += `<option value="month">Month</option>`;
+      timeSpanDropdown.innerHTML += `<option value="week">Week</option>`;
+      timeSpanDropdown.innerHTML += `<option value="day">Day</option>`;
+    }
+    selectedTimeSpan = timeSpanDropdown.value || 'year'; // Default to 'year'
   };
 
   const calculateTotalSolarExposure = (data, year) => {
@@ -89,7 +103,7 @@ $(function () {
       type: 'line',
       data: { labels: combinedLabels, datasets },
       options: {
-        responsive: true,
+        responsive: false, // Fix chart size
         plugins: { tooltip: { callbacks: { label: ctx => ctx.raw !== null ? `Value: ${ctx.raw}` : 'No Data' } } },
         scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Average Solar Exposure (MJ/m²)' } } }
       }
@@ -97,39 +111,7 @@ $(function () {
   };
 
   // Event Listeners
-  timeSpanButtons.forEach(button => button.addEventListener('click', function () {
-    timeSpanButtons.forEach(btn => btn.classList.remove('active'));
-    this.classList.add('active');
-    selectedTimeSpan = this.getAttribute('data-timespan');
-    visualizeButton.click();
-  }));
-
-  addCityCheckbox.addEventListener('change', function () {
-    if (addCityCheckbox.checked && dropdownCount < 4) {
-      dropdownCount++;
-      const firstDropdown = document.getElementById('dataset-select-1');
-      const newDropdown = document.createElement('div');
-      newDropdown.classList.add('dropdown-item', 'mt-4', 'flex', 'items-center');
-      newDropdown.setAttribute('id', `dropdown-item-${dropdownCount}`);
-      newDropdown.innerHTML = `
-        <div class="flex-grow">
-          <label for="dataset-select-${dropdownCount}" class="block text-lg font-medium mb-2">Choose another dataset:</label>
-          <select id="dataset-select-${dropdownCount}" class="border border-gray-300 rounded-md p-2 w-full">${firstDropdown.innerHTML}</select>
-        </div>
-        <button class="ml-4 bg-red-500 text-white px-4 py-2 rounded-md delete-city-button" data-dropdown-id="${dropdownCount}">Delete</button>`;
-      dropdownContainer.appendChild(newDropdown);
-      addCityCheckbox.checked = false;
-      if (dropdownCount === 4) addCityCheckbox.disabled = true;
-      newDropdown.querySelector('.delete-city-button').addEventListener('click', function () {
-        document.getElementById(`dropdown-item-${this.getAttribute('data-dropdown-id')}`).remove();
-        dropdownCount--;
-        if (dropdownCount < 4) addCityCheckbox.disabled = false;
-        updateDropdownOptions();
-      });
-      newDropdown.querySelector('select').addEventListener('change', updateDropdownOptions);
-      updateDropdownOptions();
-    }
-  });
+  yearDropdown.addEventListener('change', updateTimeSpanOptions);
 
   loadDatasetButton.addEventListener('click', function () {
     const selectedFileIds = Array.from(dropdownContainer.querySelectorAll('select')).map(dropdown => dropdown.value).filter(Boolean);
