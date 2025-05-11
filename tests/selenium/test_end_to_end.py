@@ -58,7 +58,7 @@ def test_update_visibility(driver, start_test_server):
     WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, "visibility")))
     Select(driver.find_element(By.NAME, "visibility")).select_by_value("public")
 
-    driver.find_element(By.XPATH, "//button[text()='Save Permissions']").click()
+    driver.find_element(By.ID, "permissionsForm").submit()
     WebDriverWait(driver, 5).until(EC.url_contains("/index"))
 
     assert "Permissions updated" in driver.page_source or "my files" in driver.page_source.lower()
