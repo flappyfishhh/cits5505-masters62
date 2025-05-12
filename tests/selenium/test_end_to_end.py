@@ -76,3 +76,18 @@ def test_forgot_password(driver, start_test_server):
     WebDriverWait(driver, 5).until(EC.url_contains("/login"))
     assert "reset" in driver.page_source.lower()
     
+# 6. Change email address
+def test_change_email(driver, start_test_server):
+    login(driver, "testuser1", "newpass123")  # Use new password after reset
+    driver.get(f"{BASE_URL}/profile")
+
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, "email")))
+    email_input = driver.find_element(By.NAME, "email")
+    email_input.clear()
+    email_input.send_keys("updated1@example.com")
+
+    driver.find_element(By.NAME, "submit_email").click()
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "flashes")))
+
+    assert "email updated successfully" in driver.page_source.lower()
+
