@@ -27,7 +27,7 @@ SolarScope helps users make better decisions about solar panels, energy use, and
 | 24284623 | Joshua Wang             | JoJohowl        |
 | 24289358 | Chamodhi Withana Gamage | chamodhii       |
 
-## Launching the Application (With Test Data)
+## Launching the Application
 
 ### Step 1: Clone the Repository
 
@@ -75,34 +75,33 @@ Run database migrations to set up the database schema:
 flask db upgrade
 ```
 
-### Step7: Insert Test Data
+### (Optional) Step7: Seed the Database with Sample Data
 
-Run the provided `seed_data.py` script to populate the database with test users, files, and uploads.
+Use the provided `seed_data.py` script to populate the database with sample users, files, and uploads.
 
 ```bash
 python seed_data.py
 ```
 
-### Step 8: Run the project
+### Step 8: Start the Application
 
 ```bash
 flask run
 ```
 
-The app will be available at 'http://127.0.0.1:5000/'
+Visit the app at: `http://127.0.0.1:5000/`
 
 ## Running Tests
 
-This project includes both unit tests and end-to-end tests using **Pytest** and **Selenium**.
+This project includes both unit and end-to-end (E2E) tests using **Pytest** and **Selenium**.
 
-If you plan to run Selenium tests, ensure you have the appropriate browser driver installed and in your system PATH:
+Our Selenium tests use `webdriver_manager.chrome`, which automatically downloads the correct ChromeDriver when you run `pytest`.
+If you're using a different browser or prefer manual setup, ensure the correct driver is installed and in your system PATH:
 
 - For Chrome: [Download ChromeDriver](https://sites.google.com/chromium.org/driver/)
 - For Firefox: [Download GeckoDriver](https://github.com/mozilla/geckodriver/releases)
 
-### Running the Tests
-
-To run all tests:
+### Run All Tests
 
 ```bash
 pytest
@@ -112,8 +111,20 @@ pytest
 
 This project also includes a `pytest.ini` configuration file to manage test discovery and reporting.
 
-- `tests/` – main test directory
-  - `conftest.py` – shared fixtures for both unit and Selenium tests
-  - `selenium/` – end-to-end browser tests
-  - `unit/` – unit tests for backend logic
-  - `assets/` – test CSV files used for seeding and visualization tests
+The test suite is organized as follows:
+
+- `tests/`
+  - `conftest.py` – Shared fixtures for unit and Selenium tests
+  - `selenium/` – End-to-end browser-based tests
+  - `unit/` – Unit tests for backend functionality
+  - `assets/` – CSV test data for file upload & visualization
+  - `reset_dev_db.sh` - Script to reset app.db and migrations (for dev use)
+
+We use a **daemon thread** to run the test server during Selenium testing. This means it shuts down automatically when tests finish.
+If something goes wrong and your development database ends up in a broken state, run:
+
+```bash
+./tests/reset_dev_db.sh
+```
+
+This will reset the database and reapply all migrations for a clean development setup.
