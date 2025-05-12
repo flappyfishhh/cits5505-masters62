@@ -56,9 +56,41 @@
     <canvas id="solarChart" width="800" height="400"></canvas>
   </div>
 
-  <!-- Solar Panel Suggestions -->
-  <div id="region-description" class="mt-4 p-4 bg-gray-100 rounded-md"></div>
-
+  <div id="region-description" class="mt-4 p-4 bg-gray-100 rounded-md">
+    <!-- Dynamic suggestions will be added here -->
+    <div class="dynamic-suggestions"></div>
+  
+    <!-- Static Solar Farm Suitability Table -->
+    <div id="solar-farm-suitability" class="mt-4">
+      <h3>Solar Farm Suitability Based on Annual Solar Exposure</h3>
+      <table class="table-auto border-collapse border border-gray-400 w-full mt-2">
+        <thead>
+          <tr>
+            <th class="border border-gray-300 px-4 py-2">Solar Exposure (MJ/m²/year)</th>
+            <th class="border border-gray-300 px-4 py-2">Recommendation for Solar Farms</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">&lt; 4,000</td>
+            <td class="border border-gray-300 px-4 py-2">Not viable unless heavily subsidized or for niche uses</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">4,000 – 6,000</td>
+            <td class="border border-gray-300 px-4 py-2">Marginal — detailed feasibility and payback analysis needed</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">6,000 – 8,000</td>
+            <td class="border border-gray-300 px-4 py-2">Viable — suitable for small to mid-scale solar farms</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 px-4 py-2">&gt; 8,000</td>
+            <td class="border border-gray-300 px-4 py-2">Ideal — strong ROI and excellent for large-scale farms</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <!-- Export Buttons -->
   <div class="mt-4 flex space-x-4">
     <button id="export-pdf" class="btn bg-[var(--primary-color)] text-white p-2 rounded-md">Export as PDF</button>
