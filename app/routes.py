@@ -18,8 +18,7 @@ from app.forms import (
     ForgotPasswordForm, ResetPasswordForm,
     UpdateEmailForm, ChangePasswordForm, UpdateFileForm
 )
-from datetime import datetime, timezone, timedelta
-now = datetime.now(timezone.utc)
+
 
 # ================================
 # # Solar Panel Suitability Classification Helper
@@ -54,7 +53,6 @@ def suitability_grade(avg_exposure):
             f"Average Solar Exposure value is greater than or equal to 20.0 MJ/m²/day. Current value: {avg_exposure:.2f} MJ/m²/day."
         )
 
-
 # ================================
 # Upload Blueprint
 # ================================
@@ -76,7 +74,6 @@ def intro():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     return render_template('intro.html')
-
 
 # ================================
 # User Registration
@@ -185,8 +182,6 @@ def reset_password(user_id):
             return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
-
-
 # ================================
 # Index - Shows files by access level
 # ================================
@@ -266,9 +261,9 @@ def upload():
         ensure_upload_folder()
         f = form.csv_file.data
         orig = secure_filename(f.filename)
-        ts = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')  
-        saved = f"{current_user.id}_{ts}_{orig}"
-        saved = f"{current_user.id}_{orig}" 
+        perth_tz = timezone(timedelta(hours=8))
+        ts = datetime.now(perth_tz).strftime('%Y%m%d%H%M%S')  
+        saved = f"{current_user.id}_{ts}_{orig}" 
         path = os.path.join(UPLOAD_FOLDER, saved)
         f.save(os.path.join(current_app.root_path, path))
 
@@ -395,6 +390,7 @@ def profile():
         return redirect(url_for('main.profile'))
 
     return render_template('profile.html', email_form=email_form, pw_form=pw_form)
+
 # ================================
 # Rendering visualisation page
 # ================================
@@ -431,6 +427,7 @@ def visualisation():
     unique_files = {file.id: file for file in all_files}.values()  # Use a dictionary to ensure uniqueness by file ID
 
     return render_template('visualisation.html', uploaded_files=unique_files)
+
 # ================================
 # Get file data for visualisation
 # ================================
@@ -483,7 +480,6 @@ def get_file_data(file_id):
     current_app.logger.info(f"Prepared data: {data}")
 
     return jsonify({"filename": file_record.filename, "data": data})
-
 	
 # ================================
 # Solar Data Analysis (Trend + Anomalies)
@@ -618,7 +614,6 @@ def bushfire_alert(file_id):
     start = (page - 1) * per_page
     end = start + per_page
     alerts_paginated = alerts.iloc[start:end]
-
 
     #  Forecast: Monthly risk using LogisticRegression
     monthly = df.groupby(df['Date'].dt.to_period('M')).agg({
