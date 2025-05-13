@@ -127,13 +127,12 @@ The test suite is organized as follows:
   - `selenium/` – End-to-end browser-based tests
   - `unit/` – Unit tests for backend functionality
   - `assets/` – CSV test data for file upload & visualization
-  - `reset_dev_db.sh` - Script to reset app.db and migrations (for dev use)
 
 We use a **daemon thread** to run the test server during Selenium testing. This means it shuts down automatically when tests finish.
 If something goes wrong and your development database ends up in a broken state, run:
 
 ```bash
-./tests/reset_dev_db.sh
+chmod +x reset_dev_db.sh && ./reset_dev_db.sh
 ```
 
 This will reset the database and reapply all migrations for a clean development setup.
