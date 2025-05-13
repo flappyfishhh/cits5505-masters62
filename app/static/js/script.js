@@ -247,21 +247,21 @@ function displaySuggestions(dataArray, cityNames) {
     let explanation = ''; // Explanation for the recommendation
 
     if (yearlyAverage < 4000) {
-      recommendation = 'Usually not recommended (unless heavily subsidized)';
-      explanation = 'The solar exposure in this region is below 4,000 MJ/m²/year, making it uneconomical for household solar panels unless there are subsidies or other motivations.';
+      recommendation = 'Not viable — high risk with limited commercial justification';
+      explanation = 'With annual solar exposure below 4,000 MJ/m²/year, this region falls significantly short of baseline energy yield requirements. Solar farm deployment is not economically justifiable without substantial subsidies or strategic niche applications.';
     } else if (yearlyAverage >= 4000 && yearlyAverage < 6000) {
-      recommendation = 'Moderate (check financial payback time)';
-      explanation = 'The solar exposure in this region is between 4,000 and 6,000 MJ/m²/year. It is a moderate candidate for solar panels, but you should check the financial payback time to ensure it is cost-effective.';
+      recommendation = 'Marginal viability — requires in-depth financial modeling';
+      explanation = 'Exposure levels between 4,000 and 6,000 MJ/m²/year suggest borderline viability. Investment decisions in this range demand comprehensive feasibility studies, sensitivity analyses, and long-term payback modeling to manage risk and uncertainty.';
     } else if (yearlyAverage >= 6000 && yearlyAverage < 8000) {
-      recommendation = 'Good candidate for solar installation';
-      explanation = 'The solar exposure in this region is between 6,000 and 8,000 MJ/m²/year, making it a good candidate for solar panel installation. The financial returns are likely to be favorable.';
+      recommendation = 'Viable — suitable for targeted small to mid-scale deployment';
+      explanation = 'This region’s solar exposure supports reliable energy generation at 6,000–8,000 MJ/m²/year, making it a practical candidate for small to medium-scale solar farm projects with predictable returns and moderate capital risk.';
     } else {
-      recommendation = 'Excellent location for solar';
-      explanation = 'The solar exposure in this region exceeds 8,000 MJ/m²/year, making it an excellent location for solar panel installation. High solar exposure ensures maximum energy generation and financial returns.';
+      recommendation = 'Optimal — high return potential for utility-scale investment';
+      explanation = 'Exceeding 8,000 MJ/m²/year in solar exposure, this region offers superior conditions for large-scale solar farm infrastructure with strong revenue certainty, rapid payback periods, and favorable long-term asset performance.';
     }
 
     dynamicSuggestions.innerHTML = `
-      <h3>Solar Panel Recommendation for ${cityNames[0]}</h3>
+      <h3>Solar Farm Investment Suitability for <strong>${cityNames[0]}</strong></h3>
       <p><strong>Yearly Average Solar Exposure:</strong> ${yearlyAverage.toFixed(2)} MJ/m²</p>
       <p><strong>Recommendation:</strong> ${recommendation}</p>
       <p>${explanation}</p>
@@ -277,10 +277,10 @@ function displaySuggestions(dataArray, cityNames) {
 
     const bestCity = cityAverages[0];
     dynamicSuggestions.innerHTML = `
-      <h3>Best City for Solar Panel Installation</h3>
+      <h3>Best City for Solar Farm Development</h3>
       <p><strong>City:</strong> ${bestCity.city}</p>
       <p><strong>Yearly Average Solar Exposure:</strong> ${bestCity.average.toFixed(2)} MJ/m²</p>
-      <p>${bestCity.city} has the highest yearly average solar exposure among the selected datasets, making it the most suitable location for solar panel installation.</p>
+      <p>${bestCity.city} has the highest yearly average solar exposure among the selected datasets, making it the most suitable location for solar farm development.</p>
     `;
 
     // Add a comparison table
