@@ -1,22 +1,33 @@
-# SolarScope: Solar Exposure Data Sharing & Analysis Platform
+# SolarScope | An Interactive Tool for Solar Energy and Bushfire Risk Insights
 
-## Purpose of the Application
+## Purpose
+SolarScope is a web-based analytics platform developed to support informed decision-making around solar energy potential and bushfire risk awareness. It is designed to help users upload, visualize, and analyze daily global solar exposure data obtained from the Australian Bureau of Meteorology (BoM)’s Climate Data Online service. By focusing on real measurements from weather stations located in areas of interest, the system enables targeted environmental insight.
 
-**SolarScope** is a web-based system that allows users to upload, share, and analyze solar exposure data. Users can choose to keep their data private, share it with specific individuals, or make it publicly accessible to the community.
+## Design and Use
+SolarScope is built with a user-centric, modular architecture using Flask for the backend and JavaScript/Chart.js on the frontend. The design supports the following core functionalities:
 
-Once your data is uploaded, SolarScope makes it easy to explore and understand using visual tools. You can:
+### Data Upload & Storage:
+Users can upload CSV files containing daily solar exposure readings (MJ/m²) from local weather stations. Each dataset is tagged with location metadata (city, latitude, longitude) and stored securely in a database.
 
-- Compare solar data across places and over time (like monthly, yearly, or by season)
+### Access Control & Sharing:
+Uploaded files can be marked as private, shared, or public. Shared files allow selected users to collaborate, while public files contribute to broader regional comparisons.
 
-- See summaries of the data like averages, highest and lowest values
+### Interactive Visualisation:
+Users can select one or more datasets to explore trends over time — daily, monthly, yearly — using dynamic charts. The platform provides automated recommendations for solar farm suitability based on long-term solar exposure averages.
 
-- Spot unusual patterns or problems
+### Analysis & Reporting:
+The platform performs in-browser or server-side analysis to detect:
+- Seasonal patterns
+- Outliers in solar data
+- Residential solar panel suitability
+- Bushfire risk alerts (based on consecutive high-exposure days during peak months)
+- Forecasted bushfire risk (via regression modeling)
 
-- Estimate how much solar energy your area could produce
+### Export Capabilities:
+Charts and insights can be exported as PDF or PNG, including contextual summaries that assist with planning, reporting, or stakeholder communication.
 
-You can also download your data in CSV format or save charts as images or PDFs for reports.
-
-SolarScope helps users make better decisions about solar panels, energy use, and planning based on real sunlight data.
+### User Management:
+Features include secure login, password recovery via security questions, profile editing, and email updates.
 
 ## MasterGroup62
 
@@ -89,15 +100,15 @@ python seed_data.py
 flask run
 ```
 
-Visit the app at: `http://127.0.0.1:5000/`
+Visit the app at: http://127.0.0.1:5000/
 
 ## Running Tests
 
 This project includes both unit and end-to-end (E2E) tests using **Pytest** and **Selenium**.
 
 Our Selenium tests use `webdriver_manager.chrome`, which automatically downloads the correct ChromeDriver when you run `pytest`.
-If you're using a different browser or prefer manual setup, ensure the correct driver is installed and in your system PATH:
 
+If you're using a different browser or prefer manual setup, ensure the correct driver is installed and in your system PATH:
 - For Chrome: [Download ChromeDriver](https://sites.google.com/chromium.org/driver/)
 - For Firefox: [Download GeckoDriver](https://github.com/mozilla/geckodriver/releases)
 
@@ -106,11 +117,9 @@ If you're using a different browser or prefer manual setup, ensure the correct d
 ```bash
 pytest
 ```
+This project includes a `pytest.ini` configuration file to manage test discovery and reporting.
 
 ### Test Structure
-
-This project also includes a `pytest.ini` configuration file to manage test discovery and reporting.
-
 The test suite is organized as follows:
 
 - `tests/`
