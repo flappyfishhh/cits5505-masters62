@@ -5,9 +5,9 @@
 <main class="px-4 py-12 sm:py-16 lg:py-20 space-y-16">
 
   {% for section_title, file_list, allow_manage in [
-    ("My Files", own_files, True),
-    ("Public Files", public_files, False),
-    ("Shared Files", shared_files, False)
+  ("My Files", own_files, True),
+  ("Public Files", public_files, False),
+  ("Shared Files", shared_files, False)
   ] %}
   <section class="custom-card">
     <h2 class="text-2xl sm:text-3xl font-semibold text-[var(--primary-color)] mb-6">{{ section_title }}</h2>
@@ -35,52 +35,52 @@
         <div>{{ file.visibility|capitalize }}</div>
         <div>{{ file.user.username }}</div>
         <div class="flex flex-wrap gap-2 justify-start items-center">
-          <a href="{{ url_for('main.view_file', file_id=file.id) }}"
-             class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
+          <a href="{{ url_for('main.view_file', file_id=file.id) }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
                     bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
             View
           </a>
-        
+
           {% if allow_manage %}
-          <a href="{{ url_for('main.update_file', file_id=file.id) }}"
-             class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
-                    bg-green-600 text-white hover:bg-green-700 focus:ring focus:ring-green-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5h6M11 9h4M5 13l4 4L19 7" />
+          <a href="{{ url_for('main.update_file', file_id=file.id) }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
+          bg-green-600 text-white hover:bg-green-700 focus:ring focus:ring-green-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M11 9h4M5 13l4 4L19 7" />
             </svg>
             Update
           </a>
           {% endif %}
-            <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}"
-          class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
-              bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 4v16m8-8H4" />
-          </svg>
-           Analyze
+
+          <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
+          bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Analyze
           </a>
+
           {% if allow_manage %}
           <a href="{{ url_for('main.delete_file', file_id=file.id) }}"
-             onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');"
-             class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
-                    bg-red-600 text-white hover:bg-red-700 focus:ring focus:ring-red-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12" />
+            onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
+          bg-red-600 text-white hover:bg-red-700 focus:ring focus:ring-red-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
             Delete
           </a>
           {% endif %}
+
         </div>
-        
+
       </div>
       {% endfor %}
     </div>
