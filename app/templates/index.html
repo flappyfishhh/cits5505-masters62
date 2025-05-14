@@ -5,9 +5,9 @@
 <main class="px-4 py-12 sm:py-16 lg:py-20 space-y-16">
 
   {% for section_title, file_list, allow_manage in [
-  ("My Files", own_files, True),
-  ("Public Files", public_files, False),
-  ("Shared Files", shared_files, False)
+    ("My Files", own_files, True),
+    ("Public Files", public_files, False),
+    ("Shared Files", shared_files, False)
   ] %}
   <section class="custom-card">
     <h2 class="text-2xl sm:text-3xl font-semibold text-[var(--primary-color)] mb-6">{{ section_title }}</h2>
@@ -78,9 +78,7 @@
             Delete
           </a>
           {% endif %}
-
         </div>
-
       </div>
       {% endfor %}
     </div>
