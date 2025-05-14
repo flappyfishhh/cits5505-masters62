@@ -502,6 +502,9 @@ def solar_analysis(file_id):
     if file.visibility == 'shared' and (current_user != file.user and current_user not in file.share_with):
         abort(403)
 
+    if file.visibility == 'public':
+        pass
+
     uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
     if not uploads:
         flash('No data available for analysis.', 'warning')
@@ -585,6 +588,9 @@ def bushfire_alert(file_id):
 
     if file.visibility == 'shared' and (current_user != file.user and current_user not in file.share_with):
         abort(403)
+
+    if file.visibility == 'public':
+        pass
 
     uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
     if not uploads:
