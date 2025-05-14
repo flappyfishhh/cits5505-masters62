@@ -28,7 +28,7 @@
           <!-- Last Login -->
           <div class="bg-white/10 p-6 rounded-lg shadow-lg backdrop-blur-md border border-white/20 min-w-[200px]">
             <h3 class="text-lg font-semibold mb-2 text-[var(--primary-color)]">Last Login</h3>
-            <p class="text-xl text-[var(--primary-color)] whitespace-nowrap">{{ last_login }}</p>
+            <p class="text-xl text-[var(--primary-color)] whitespace-nowrap">{{ last_login if last_login else "-" }}</p>
           </div>
       
           <!-- Quick Action -->

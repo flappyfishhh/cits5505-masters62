@@ -133,8 +133,11 @@ def dashboard():
         .all()
     )
     now = datetime.now(timezone(timedelta(hours=8)))
-    last_login = current_user.last_login_time + timedelta(hours=8)
-    formatted_last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+    if current_user.last_login_time:
+        last_login = current_user.last_login_time + timedelta(hours=8)
+        formatted_last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        formatted_last_login = "-"
     return render_template('dashboard.html', recent_uploads=recent_uploads, now=now, last_login=formatted_last_login)
 
 # ================================
