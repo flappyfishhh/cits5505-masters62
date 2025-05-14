@@ -128,7 +128,9 @@ The test suite is organized as follows:
   - `unit/` – Unit tests for backend functionality
   - `assets/` – CSV test data for file upload & visualization
 
-We use a **daemon thread** to run the test server during Selenium testing. This means it shuts down automatically when tests finish.
+## Tools
+
+We use a **daemon thread** to run the test server during Selenium testing. It shuts down automatically when tests finish.
 If something goes wrong and your development database ends up in a broken state, run:
 
 ```bash
