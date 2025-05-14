@@ -493,7 +493,10 @@ def solar_analysis(file_id):
 
     file = FileUpload.query.get_or_404(file_id)
 
-    if file.user_id != current_user.id and current_user not in file.share_with:
+    if file.visibility == 'private' and file.user_id != current_user.id:
+        abort(403)
+
+    if file.visibility == 'shared' and (current_user != file.user and current_user not in file.share_with):
         abort(403)
 
     uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()
@@ -573,7 +576,11 @@ def bushfire_alert(file_id):
     from sklearn.linear_model import LogisticRegression, LinearRegression
 
     file = FileUpload.query.get_or_404(file_id)
-    if file.user_id != current_user.id and current_user not in file.share_with:
+    
+    if file.visibility == 'private' and file.user_id != current_user.id:
+        abort(403)
+
+    if file.visibility == 'shared' and (current_user != file.user and current_user not in file.share_with):
         abort(403)
 
     uploads = Upload.query.filter_by(file_id=file.id).order_by(Upload.row_number).all()

@@ -57,6 +57,7 @@
             </svg>
             Update
           </a>
+          {% endif %}
             <a href="{{ url_for('main.solar_analysis', file_id=file.id) }}"
           class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
               bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300">
@@ -66,7 +67,7 @@
           </svg>
            Analyze
           </a>
-          
+          {% if allow_manage %}
           <a href="{{ url_for('main.delete_file', file_id=file.id) }}"
              onclick="return confirm('Are you sure you want to delete {{ file.filename }}?');"
              class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg shadow-sm transition
