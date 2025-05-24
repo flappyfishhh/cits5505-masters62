@@ -131,10 +131,23 @@ The test suite is organized as follows:
 We use a **daemon thread** to run the test server during Selenium testing. It shuts down automatically when tests finish.
 
 ## Tools
+- `seed_data.py`
 
-If something goes wrong and your development database ends up in a broken state, run:
-```bash
-chmod +x reset_dev_db.sh && ./reset_dev_db.sh
-```
+  Populates the database with sample users, solar data files, and uploads. Useful for testing, demonstration, or quickly initializing development data.
+  ```bash
+  python seed_data.py
+  ```
+- `pytest.ini`
 
-This will reset the database and reapply all migrations for a clean development setup.
+  Configuration file for `pytest`. It manages test discovery, markers, output formatting, and other testing behaviors to ensure consistent results across environments.
+
+- `conftest.py`
+
+  Contains shared fixtures used across unit and Selenium tests. Required for consistent test environment setup.
+
+- `reset_dev_db.sh`
+
+  Shell script to reset the development database. It drops all data, reapplies migrations, and restores a clean schema state.
+  ```bash
+  chmod +x reset_dev_db.sh && ./reset_dev_db.sh
+  ```
